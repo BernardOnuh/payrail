@@ -26,6 +26,6 @@ FROM node:22-slim
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/api/dist ./api/dist
+COPY --from=build /app/api ./api
 EXPOSE 3033
 CMD ["node", "api/dist/main.js"]
