@@ -22,7 +22,7 @@ try {
   console.warn(`payrail: failed to load ./.env: ${(e as Error).message}`);
 }
 
-const port = Number(process.env.PAYRAIL_PORT ?? 3000);
+const port = Number(process.env.PAYRAIL_PORT ?? process.env.PORT ?? 3000);
 const dbPath = process.env.PAYRAIL_DB_PATH ?? "payrail.sqlite";
 const ttlSeconds = Number(process.env.PAYRAIL_QUOTE_TTL_SECONDS ?? 300);
 const operatorKey = process.env.PAYRAIL_OPERATOR_KEY ?? "";
