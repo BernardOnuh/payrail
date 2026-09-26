@@ -1,0 +1,2110 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Payrail API",
+    "version": "0.1.0",
+    "description": "Non-custodial stablecoin payout API for Arc. Payrail quotes and plans swaps and batch payouts from multiple liquidity sources and returns UNSIGNED transactions; it never holds or signs with private keys. All amounts are bigint in base units, serialized as decimal strings (USDC/EURC=6 decimals, cirBTC=8, WETH=18; gas/fees in native USDC at 18 decimals).",
+    "contact": {
+      "name": "Payrail"
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key issued via Payrail; each key carries a spending/slippage/rate policy."
+      }
+    },
+    "schemas": {
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "VALIDATION_ERROR",
+                  "UNAUTHORIZED",
+                  "POLICY_VIOLATION",
+                  "RATE_LIMITED",
+                  "QUOTE_FAILED",
+                  "NOT_FOUND",
+                  "STEP_NOT_FOUND",
+                  "INTERNAL_ERROR"
+                ]
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          }
+                        ]
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          },
+          "requestId": {
+            "type": "string",
+            "example": "req_01HZ9R..."
+          }
+        },
+        "required": [
+          "error",
+          "requestId"
+        ]
+      },
+      "QuoteResponse": {
+        "type": "object",
+        "properties": {
+          "chain": {
+            "type": "string",
+            "enum": [
+              "mainnet",
+              "testnet"
+            ],
+            "description": "Arc chain. mainnet = 5042, testnet = 5042002."
+          },
+          "tokenIn": {
+            "type": "string",
+            "enum": [
+              "USDC",
+              "EURC",
+              "cirBTC",
+              "WETH"
+            ],
+            "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+          },
+          "tokenOut": {
+            "type": "string",
+            "enum": [
+              "USDC",
+              "EURC",
+              "cirBTC",
+              "WETH"
+            ],
+            "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+          },
+          "amountIn": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "example": "1000000"
+          },
+          "best": {
+            "$ref": "#/components/schemas/Quote"
+          },
+          "alternatives": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Quote"
+            }
+          },
+          "failed": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source",
+                "error"
+              ]
+            }
+          },
+          "quoteExpiresAt": {
+            "type": "integer",
+            "description": "Unix seconds; mirrors best.expiry."
+          },
+          "requestId": {
+            "type": "string",
+            "example": "req_01HZ9R..."
+          }
+        },
+        "required": [
+          "chain",
+          "tokenIn",
+          "tokenOut",
+          "amountIn",
+          "best",
+          "alternatives",
+          "failed",
+          "quoteExpiresAt",
+          "requestId"
+        ]
+      },
+      "Quote": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "Source id, e.g. app-kit or uniswap-v4."
+          },
+          "chain": {
+            "type": "string",
+            "enum": [
+              "mainnet",
+              "testnet"
+            ],
+            "description": "Arc chain. mainnet = 5042, testnet = 5042002."
+          },
+          "tokenIn": {
+            "type": "string",
+            "enum": [
+              "USDC",
+              "EURC",
+              "cirBTC",
+              "WETH"
+            ],
+            "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+          },
+          "tokenOut": {
+            "type": "string",
+            "enum": [
+              "USDC",
+              "EURC",
+              "cirBTC",
+              "WETH"
+            ],
+            "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+          },
+          "amountIn": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "example": "1000000"
+          },
+          "amountOut": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "example": "1000000"
+          },
+          "minAmountOut": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "example": "1000000"
+          },
+          "estimatedFeeUsdc": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "example": "1000000"
+          },
+          "feeInOutput": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "example": "1000000"
+          },
+          "priceImpactBps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "expiry": {
+            "type": "integer"
+          },
+          "fees": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "provider",
+                    "gas",
+                    "network",
+                    "protocol"
+                  ]
+                },
+                "token": {
+                  "type": "string",
+                  "enum": [
+                    "USDC",
+                    "EURC",
+                    "cirBTC",
+                    "WETH"
+                  ],
+                  "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+                },
+                "amount": {
+                  "type": "string",
+                  "pattern": "^[0-9]+$",
+                  "example": "1000000"
+                }
+              },
+              "required": [
+                "type",
+                "token",
+                "amount"
+              ]
+            }
+          },
+          "raw": {
+            "nullable": true
+          }
+        },
+        "required": [
+          "source",
+          "chain",
+          "tokenIn",
+          "tokenOut",
+          "amountIn",
+          "amountOut",
+          "minAmountOut",
+          "estimatedFeeUsdc",
+          "feeInOutput",
+          "priceImpactBps",
+          "expiry",
+          "fees"
+        ]
+      },
+      "QuoteRequest": {
+        "type": "object",
+        "properties": {
+          "chain": {
+            "type": "string",
+            "enum": [
+              "mainnet",
+              "testnet"
+            ],
+            "description": "Default: mainnet."
+          },
+          "tokenIn": {
+            "type": "string",
+            "enum": [
+              "USDC",
+              "EURC",
+              "cirBTC",
+              "WETH"
+            ],
+            "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+          },
+          "tokenOut": {
+            "type": "string",
+            "enum": [
+              "USDC",
+              "EURC",
+              "cirBTC",
+              "WETH"
+            ],
+            "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "example": "1000000",
+            "description": "Token amount in base units (USDC/EURC=6 decimals, cirBTC=8, WETH=18), as a decimal string to preserve precision."
+          },
+          "slippageBps": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000,
+            "description": "Maximum accepted slippage, in basis points (1..10_000)."
+          }
+        },
+        "required": [
+          "tokenIn",
+          "tokenOut",
+          "amount",
+          "slippageBps"
+        ]
+      },
+      "PayoutResponse": {
+        "type": "object",
+        "properties": {
+          "plan": {
+            "$ref": "#/components/schemas/Plan"
+          },
+          "requestId": {
+            "type": "string",
+            "example": "req_01HZ9R..."
+          }
+        },
+        "required": [
+          "plan",
+          "requestId"
+        ]
+      },
+      "Plan": {
+        "type": "object",
+        "properties": {
+          "planId": {
+            "type": "string",
+            "pattern": "^plr_[0-9A-Za-z_-]+$"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-09-24T21:00:00.000Z"
+          },
+          "chain": {
+            "type": "string",
+            "enum": [
+              "mainnet",
+              "testnet"
+            ],
+            "description": "Arc chain. mainnet = 5042, testnet = 5042002."
+          },
+          "payer": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "example": "0xBEf5f6d51CB62b58e6A8f77868681825C6fe21c1",
+            "description": "Checksummed EVM address (normalized on parse)."
+          },
+          "sourceToken": {
+            "type": "string",
+            "enum": [
+              "USDC",
+              "EURC",
+              "cirBTC",
+              "WETH"
+            ],
+            "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 280,
+            "default": null
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanStep"
+            }
+          },
+          "totals": {
+            "$ref": "#/components/schemas/PlanTotals"
+          },
+          "quoteExpiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-09-24T21:00:00.000Z"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "planId",
+          "createdAt",
+          "chain",
+          "payer",
+          "sourceToken",
+          "steps",
+          "totals",
+          "quoteExpiresAt",
+          "warnings"
+        ]
+      },
+      "PlanStep": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "approve"
+                ]
+              },
+              "token": {
+                "type": "string",
+                "enum": [
+                  "USDC",
+                  "EURC",
+                  "cirBTC",
+                  "WETH"
+                ],
+                "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+              },
+              "spender": {
+                "type": "string",
+                "pattern": "^0x[0-9a-fA-F]{40}$",
+                "example": "0xBEf5f6d51CB62b58e6A8f77868681825C6fe21c1",
+                "description": "Checksummed EVM address (normalized on parse)."
+              },
+              "amount": {
+                "type": "string",
+                "pattern": "^[0-9]+$",
+                "example": "1000000"
+              },
+              "tx": {
+                "$ref": "#/components/schemas/PlanTx"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "token",
+              "spender",
+              "amount",
+              "tx",
+              "description"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "swap"
+                ]
+              },
+              "tokenIn": {
+                "type": "string",
+                "enum": [
+                  "USDC",
+                  "EURC",
+                  "cirBTC",
+                  "WETH"
+                ],
+                "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+              },
+              "tokenOut": {
+                "type": "string",
+                "enum": [
+                  "USDC",
+                  "EURC",
+                  "cirBTC",
+                  "WETH"
+                ],
+                "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+              },
+              "amountIn": {
+                "type": "string",
+                "pattern": "^[0-9]+$",
+                "example": "1000000"
+              },
+              "amountOut": {
+                "type": "string",
+                "pattern": "^[0-9]+$",
+                "example": "1000000"
+              },
+              "minAmountOut": {
+                "type": "string",
+                "pattern": "^[0-9]+$",
+                "example": "1000000"
+              },
+              "source": {
+                "type": "string"
+              },
+              "tx": {
+                "$ref": "#/components/schemas/PlanTx"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "tokenIn",
+              "tokenOut",
+              "amountIn",
+              "amountOut",
+              "minAmountOut",
+              "source",
+              "tx",
+              "description"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "batchPayout"
+                ]
+              },
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "USDC",
+                  "EURC",
+                  "cirBTC",
+                  "WETH"
+                ],
+                "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+              },
+              "payouts": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PayoutLeg"
+                },
+                "minItems": 1
+              },
+              "tx": {
+                "$ref": "#/components/schemas/PlanTx"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "currency",
+              "payouts",
+              "tx",
+              "description"
+            ]
+          }
+        ]
+      },
+      "PlanTx": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "example": "0xBEf5f6d51CB62b58e6A8f77868681825C6fe21c1",
+            "description": "Checksummed EVM address (normalized on parse)."
+          },
+          "data": {
+            "type": "string",
+            "pattern": "^0x(?:[0-9a-fA-F]{2})*$"
+          },
+          "value": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "example": "1000000"
+          }
+        },
+        "required": [
+          "to",
+          "data",
+          "value"
+        ]
+      },
+      "PayoutLeg": {
+        "type": "object",
+        "properties": {
+          "recipient": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "example": "0xBEf5f6d51CB62b58e6A8f77868681825C6fe21c1",
+            "description": "Checksummed EVM address (normalized on parse)."
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "example": "1000000",
+            "description": "Amount in base units of the payout currency."
+          }
+        },
+        "required": [
+          "recipient",
+          "amount"
+        ]
+      },
+      "PlanTotals": {
+        "type": "object",
+        "properties": {
+          "sourceToken": {
+            "type": "string",
+            "enum": [
+              "USDC",
+              "EURC",
+              "cirBTC",
+              "WETH"
+            ],
+            "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+          },
+          "sourceTokenSpent": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "example": "1000000"
+          },
+          "payouts": {
+            "type": "object",
+            "properties": {
+              "USDC": {
+                "type": "string",
+                "pattern": "^[0-9]+$",
+                "example": "1000000"
+              },
+              "EURC": {
+                "type": "string",
+                "pattern": "^[0-9]+$",
+                "example": "1000000"
+              },
+              "cirBTC": {
+                "type": "string",
+                "pattern": "^[0-9]+$",
+                "example": "1000000"
+              },
+              "WETH": {
+                "type": "string",
+                "pattern": "^[0-9]+$",
+                "example": "1000000"
+              }
+            }
+          },
+          "feesUsdc": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "example": "1000000"
+          },
+          "estimatedGasUsdc": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "example": "1000000"
+          }
+        },
+        "required": [
+          "sourceToken",
+          "sourceTokenSpent",
+          "payouts",
+          "feesUsdc",
+          "estimatedGasUsdc"
+        ]
+      },
+      "PayoutRequest": {
+        "type": "object",
+        "properties": {
+          "chain": {
+            "type": "string",
+            "enum": [
+              "mainnet",
+              "testnet"
+            ],
+            "description": "Arc chain. mainnet = 5042, testnet = 5042002."
+          },
+          "payer": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "example": "0xBEf5f6d51CB62b58e6A8f77868681825C6fe21c1",
+            "description": "Checksummed EVM address (normalized on parse)."
+          },
+          "sourceToken": {
+            "type": "string",
+            "enum": [
+              "USDC",
+              "EURC",
+              "cirBTC",
+              "WETH"
+            ],
+            "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+          },
+          "memo": {
+            "type": "string",
+            "maxLength": 280
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Payment"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          }
+        },
+        "required": [
+          "payer",
+          "sourceToken",
+          "payments"
+        ]
+      },
+      "Payment": {
+        "type": "object",
+        "properties": {
+          "recipient": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "example": "0xBEf5f6d51CB62b58e6A8f77868681825C6fe21c1",
+            "description": "Checksummed EVM address (normalized on parse)."
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "example": "1000000",
+            "description": "Token amount in base units (USDC/EURC=6 decimals, cirBTC=8, WETH=18), as a decimal string to preserve precision."
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USDC",
+              "EURC",
+              "cirBTC",
+              "WETH"
+            ],
+            "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+          }
+        },
+        "required": [
+          "recipient",
+          "amount",
+          "currency"
+        ]
+      },
+      "PlanState": {
+        "type": "object",
+        "properties": {
+          "planId": {
+            "type": "string",
+            "pattern": "^plr_[0-9A-Za-z_-]+$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "created",
+              "inProgress",
+              "final",
+              "failed"
+            ]
+          },
+          "chain": {
+            "type": "string",
+            "enum": [
+              "mainnet",
+              "testnet"
+            ],
+            "description": "Arc chain. mainnet = 5042, testnet = 5042002."
+          },
+          "payer": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "example": "0xBEf5f6d51CB62b58e6A8f77868681825C6fe21c1",
+            "description": "Checksummed EVM address (normalized on parse)."
+          },
+          "sourceToken": {
+            "type": "string",
+            "enum": [
+              "USDC",
+              "EURC",
+              "cirBTC",
+              "WETH"
+            ],
+            "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 280
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanStepState"
+            }
+          },
+          "totals": {
+            "type": "object",
+            "properties": {
+              "sourceToken": {
+                "type": "string",
+                "enum": [
+                  "USDC",
+                  "EURC",
+                  "cirBTC",
+                  "WETH"
+                ],
+                "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+              },
+              "sourceTokenSpent": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "payouts": {
+                "type": "object",
+                "properties": {
+                  "USDC": {
+                    "type": "string",
+                    "pattern": "^[0-9]+$"
+                  },
+                  "EURC": {
+                    "type": "string",
+                    "pattern": "^[0-9]+$"
+                  },
+                  "cirBTC": {
+                    "type": "string",
+                    "pattern": "^[0-9]+$"
+                  },
+                  "WETH": {
+                    "type": "string",
+                    "pattern": "^[0-9]+$"
+                  }
+                }
+              },
+              "feesUsdc": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "estimatedGasUsdc": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            },
+            "required": [
+              "sourceToken",
+              "sourceTokenSpent",
+              "payouts",
+              "feesUsdc",
+              "estimatedGasUsdc"
+            ]
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-09-24T21:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-09-24T21:00:00.000Z"
+          },
+          "quoteExpiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-09-24T21:00:00.000Z"
+          },
+          "final": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "confirmedSteps": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "failedSteps": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "txHashes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^0x[0-9a-fA-F]{64}$"
+                }
+              }
+            },
+            "default": null,
+            "required": [
+              "confirmedSteps",
+              "failedSteps",
+              "txHashes"
+            ]
+          }
+        },
+        "required": [
+          "planId",
+          "status",
+          "chain",
+          "payer",
+          "sourceToken",
+          "memo",
+          "steps",
+          "totals",
+          "warnings",
+          "createdAt",
+          "updatedAt",
+          "quoteExpiresAt"
+        ]
+      },
+      "PlanStepState": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "approve"
+                ]
+              },
+              "token": {
+                "type": "string",
+                "enum": [
+                  "USDC",
+                  "EURC",
+                  "cirBTC",
+                  "WETH"
+                ],
+                "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+              },
+              "spender": {
+                "type": "string",
+                "pattern": "^0x[0-9a-fA-F]{40}$",
+                "example": "0xBEf5f6d51CB62b58e6A8f77868681825C6fe21c1",
+                "description": "Checksummed EVM address (normalized on parse)."
+              },
+              "amount": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "tx": {
+                "type": "object",
+                "properties": {
+                  "to": {
+                    "type": "string",
+                    "pattern": "^0x[0-9a-fA-F]{40}$",
+                    "example": "0xBEf5f6d51CB62b58e6A8f77868681825C6fe21c1",
+                    "description": "Checksummed EVM address (normalized on parse)."
+                  },
+                  "data": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string",
+                    "pattern": "^[0-9]+$"
+                  }
+                },
+                "required": [
+                  "to",
+                  "data",
+                  "value"
+                ]
+              },
+              "description": {
+                "type": "string"
+              },
+              "stepId": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "unsigned",
+                  "submitted",
+                  "confirmed",
+                  "failed"
+                ]
+              },
+              "txHash": {
+                "type": "string",
+                "pattern": "^0x[0-9a-fA-F]{64}$"
+              },
+              "explorerUrl": {
+                "type": "string",
+                "nullable": true,
+                "format": "uri",
+                "default": null
+              },
+              "submittedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-09-24T21:00:00.000Z"
+              },
+              "confirmedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-09-24T21:00:00.000Z"
+              },
+              "failedError": {
+                "type": "string",
+                "nullable": true,
+                "default": null
+              }
+            },
+            "required": [
+              "type",
+              "token",
+              "spender",
+              "amount",
+              "tx",
+              "description",
+              "stepId",
+              "status"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "swap"
+                ]
+              },
+              "tokenIn": {
+                "type": "string",
+                "enum": [
+                  "USDC",
+                  "EURC",
+                  "cirBTC",
+                  "WETH"
+                ],
+                "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+              },
+              "tokenOut": {
+                "type": "string",
+                "enum": [
+                  "USDC",
+                  "EURC",
+                  "cirBTC",
+                  "WETH"
+                ],
+                "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+              },
+              "amountIn": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "amountOut": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "minAmountOut": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "source": {
+                "type": "string"
+              },
+              "tx": {
+                "type": "object",
+                "properties": {
+                  "to": {
+                    "type": "string",
+                    "pattern": "^0x[0-9a-fA-F]{40}$",
+                    "example": "0xBEf5f6d51CB62b58e6A8f77868681825C6fe21c1",
+                    "description": "Checksummed EVM address (normalized on parse)."
+                  },
+                  "data": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string",
+                    "pattern": "^[0-9]+$"
+                  }
+                },
+                "required": [
+                  "to",
+                  "data",
+                  "value"
+                ]
+              },
+              "description": {
+                "type": "string"
+              },
+              "stepId": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "unsigned",
+                  "submitted",
+                  "confirmed",
+                  "failed"
+                ]
+              },
+              "txHash": {
+                "type": "string",
+                "pattern": "^0x[0-9a-fA-F]{64}$"
+              },
+              "explorerUrl": {
+                "type": "string",
+                "nullable": true,
+                "format": "uri",
+                "default": null
+              },
+              "submittedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-09-24T21:00:00.000Z"
+              },
+              "confirmedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-09-24T21:00:00.000Z"
+              },
+              "failedError": {
+                "type": "string",
+                "nullable": true,
+                "default": null
+              }
+            },
+            "required": [
+              "type",
+              "tokenIn",
+              "tokenOut",
+              "amountIn",
+              "amountOut",
+              "minAmountOut",
+              "source",
+              "tx",
+              "description",
+              "stepId",
+              "status"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "batchPayout"
+                ]
+              },
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "USDC",
+                  "EURC",
+                  "cirBTC",
+                  "WETH"
+                ],
+                "description": "Registered token key (addresses live in chainConfig, never in request bodies)."
+              },
+              "payouts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "recipient": {
+                      "type": "string",
+                      "pattern": "^0x[0-9a-fA-F]{40}$",
+                      "example": "0xBEf5f6d51CB62b58e6A8f77868681825C6fe21c1",
+                      "description": "Checksummed EVM address (normalized on parse)."
+                    },
+                    "amount": {
+                      "type": "string",
+                      "pattern": "^[0-9]+$"
+                    }
+                  },
+                  "required": [
+                    "recipient",
+                    "amount"
+                  ]
+                }
+              },
+              "tx": {
+                "type": "object",
+                "properties": {
+                  "to": {
+                    "type": "string",
+                    "pattern": "^0x[0-9a-fA-F]{40}$",
+                    "example": "0xBEf5f6d51CB62b58e6A8f77868681825C6fe21c1",
+                    "description": "Checksummed EVM address (normalized on parse)."
+                  },
+                  "data": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string",
+                    "pattern": "^[0-9]+$"
+                  }
+                },
+                "required": [
+                  "to",
+                  "data",
+                  "value"
+                ]
+              },
+              "description": {
+                "type": "string"
+              },
+              "stepId": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "unsigned",
+                  "submitted",
+                  "confirmed",
+                  "failed"
+                ]
+              },
+              "txHash": {
+                "type": "string",
+                "pattern": "^0x[0-9a-fA-F]{64}$"
+              },
+              "explorerUrl": {
+                "type": "string",
+                "nullable": true,
+                "format": "uri",
+                "default": null
+              },
+              "submittedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-09-24T21:00:00.000Z"
+              },
+              "confirmedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-09-24T21:00:00.000Z"
+              },
+              "failedError": {
+                "type": "string",
+                "nullable": true,
+                "default": null
+              }
+            },
+            "required": [
+              "type",
+              "currency",
+              "payouts",
+              "tx",
+              "description",
+              "stepId",
+              "status"
+            ]
+          }
+        ]
+      },
+      "SseEvent": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "plan.created"
+                ]
+              },
+              "data": {
+                "$ref": "#/components/schemas/PlanState"
+              },
+              "ts": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-09-24T21:00:00.000Z"
+              }
+            },
+            "required": [
+              "type",
+              "data",
+              "ts"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "step.submitted"
+                ]
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "planId": {
+                    "type": "string"
+                  },
+                  "stepId": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "txHash": {
+                    "type": "string",
+                    "pattern": "^0x[0-9a-fA-F]{64}$"
+                  },
+                  "explorerUrl": {
+                    "type": "string",
+                    "format": "uri"
+                  }
+                },
+                "required": [
+                  "planId",
+                  "stepId",
+                  "txHash",
+                  "explorerUrl"
+                ]
+              },
+              "ts": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-09-24T21:00:00.000Z"
+              }
+            },
+            "required": [
+              "type",
+              "data",
+              "ts"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "step.confirmed"
+                ]
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "planId": {
+                    "type": "string"
+                  },
+                  "stepId": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "txHash": {
+                    "type": "string",
+                    "pattern": "^0x[0-9a-fA-F]{64}$"
+                  },
+                  "explorerUrl": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "gasUsedUsdc": {
+                    "type": "string",
+                    "pattern": "^[0-9]+$"
+                  }
+                },
+                "required": [
+                  "planId",
+                  "stepId",
+                  "txHash",
+                  "explorerUrl"
+                ]
+              },
+              "ts": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-09-24T21:00:00.000Z"
+              }
+            },
+            "required": [
+              "type",
+              "data",
+              "ts"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "step.failed"
+                ]
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "planId": {
+                    "type": "string"
+                  },
+                  "stepId": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "txHash": {
+                    "type": "string",
+                    "pattern": "^0x[0-9a-fA-F]{64}$"
+                  },
+                  "error": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "planId",
+                  "stepId",
+                  "txHash",
+                  "error"
+                ]
+              },
+              "ts": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-09-24T21:00:00.000Z"
+              }
+            },
+            "required": [
+              "type",
+              "data",
+              "ts"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "plan.final"
+                ]
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "planId": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "final",
+                      "failed"
+                    ]
+                  },
+                  "confirmedSteps": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "failedSteps": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "txHashes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^0x[0-9a-fA-F]{64}$"
+                    }
+                  }
+                },
+                "required": [
+                  "planId",
+                  "status",
+                  "confirmedSteps",
+                  "failedSteps",
+                  "txHashes"
+                ]
+              },
+              "ts": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-09-24T21:00:00.000Z"
+              }
+            },
+            "required": [
+              "type",
+              "data",
+              "ts"
+            ]
+          }
+        ]
+      },
+      "SubmitStepResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "planId": {
+            "type": "string"
+          },
+          "stepId": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "unsigned",
+              "submitted",
+              "confirmed",
+              "failed"
+            ]
+          },
+          "txHash": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{64}$"
+          },
+          "explorerUrl": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "ok",
+          "planId",
+          "stepId",
+          "status",
+          "txHash",
+          "explorerUrl"
+        ]
+      },
+      "SubmitStep": {
+        "type": "object",
+        "properties": {
+          "stepId": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "txHash": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{64}$"
+          }
+        },
+        "required": [
+          "stepId",
+          "txHash"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "Service health.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "chain": {
+                      "type": "string",
+                      "enum": [
+                        "mainnet",
+                        "testnet"
+                      ]
+                    },
+                    "version": {
+                      "type": "string"
+                    },
+                    "uptimeSec": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "chain",
+                    "version",
+                    "uptimeSec"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal or quote-source error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/quote": {
+      "post": {
+        "tags": [
+          "quote"
+        ],
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 256,
+              "description": "API key (policy enforced per key)."
+            },
+            "required": true,
+            "description": "API key (policy enforced per key).",
+            "name": "X-API-Key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Best quote plus alternatives.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request body/params failed zod validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or unknown API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request violates the key's policy (spend limit, slippage cap, or token allowlist).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Key exceeds requestsPerMinute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal or quote-source error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/payout": {
+      "post": {
+        "tags": [
+          "payout"
+        ],
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 256,
+              "description": "API key (policy enforced per key)."
+            },
+            "required": true,
+            "description": "API key (policy enforced per key).",
+            "name": "X-API-Key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayoutRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Unsigned execution plan.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request body/params failed zod validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or unknown API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request violates the key's policy (spend limit, slippage cap, or token allowlist).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Key exceeds requestsPerMinute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal or quote-source error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/plan/{id}": {
+      "get": {
+        "tags": [
+          "plan"
+        ],
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^plr_[0-9A-Za-z_-]+$",
+              "description": "Plan id."
+            },
+            "required": true,
+            "description": "Plan id.",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 256,
+              "description": "API key (policy enforced per key)."
+            },
+            "required": true,
+            "description": "API key (policy enforced per key).",
+            "name": "X-API-Key",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current plan state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanState"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or unknown API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal or quote-source error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/stream/{id}": {
+      "get": {
+        "tags": [
+          "plan",
+          "stream"
+        ],
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^plr_[0-9A-Za-z_-]+$",
+              "description": "Plan id."
+            },
+            "required": true,
+            "description": "Plan id.",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 256,
+              "description": "API key (policy enforced per key)."
+            },
+            "required": true,
+            "description": "API key (policy enforced per key).",
+            "name": "X-API-Key",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-Sent Events. Each `data:` line carries one event matching `SseEvent` below.",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/SseEvent"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or unknown API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal or quote-source error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/plan/{id}/submitted": {
+      "post": {
+        "tags": [
+          "plan"
+        ],
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^plr_[0-9A-Za-z_-]+$",
+              "description": "Plan id."
+            },
+            "required": true,
+            "description": "Plan id.",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 256,
+              "description": "API key (policy enforced per key)."
+            },
+            "required": true,
+            "description": "API key (policy enforced per key).",
+            "name": "X-API-Key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitStep"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Step marked submitted; watcher takes over.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitStepResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request body/params failed zod validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or unknown API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal or quote-source error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

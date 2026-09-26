@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+/*
+ * Payrail — visual direction
+ * ---------------------------
+ * Type: Inter (UI), Inter Tight (display), IBM Plex Mono (amounts/ledger).
+ * Palette: warm paper + green-ink neutrals; a precise pine/mint accent (money,
+ * not crypto-purple); restrained amber for warnings and red for failures.
+ * Layout: dense "treasury desk" — visible 1px hairlines, left labels, tabular
+ * amounts, status dots over boxes and bars. Calm, verifiable, high-trust.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --paper: #f5f4ef;
+  --surface: #ffffff;
+  --surface2: #ecebe4;
+  --surface3: #e3e1d7;
+  --ink: #161913;
+  --muted: #535a4f;
+  --faint: #8a9286;
+  --line: #e2e1d6;
+  --linestrong: #c9c8b9;
+  --accent: #0f7a5c;
+  --accentink: #fffdf8;
+  --accentsoft: #dcf0e6;
+  --mint: #2bb98a;
+  --amber: #9a6b1f;
+  --ambersoft: #f6ecd7;
+  --danger: #b3261e;
+  --dangersoft: #fae7e3;
+  --focus: #0f7a5c;
+  --shadow: 0 1px 2px rgb(22 25 19 / 0.06), 0 8px 24px rgb(22 25 19 / 0.06);
+}
+
+.dark {
+  --paper: #0a0e0c;
+  --surface: #111613;
+  --surface2: #161c18;
+  --surface3: #1d2520;
+  --ink: #e7ece8;
+  --muted: #9aa79e;
+  --faint: #66736a;
+  --line: #232b26;
+  --linestrong: #36413a;
+  --accent: #4fd6a3;
+  --accentink: #05130c;
+  --accentsoft: #10362a;
+  --mint: #6fe6bb;
+  --amber: #e3a158;
+  --ambersoft: #382a16;
+  --danger: #ff8077;
+  --dangersoft: #3a1715;
+  --focus: #4fd6a3;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.35);
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface2: var(--surface2);
+  --color-surface3: var(--surface3);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-linestrong: var(--linestrong);
+  --color-accent: var(--accent);
+  --color-accentink: var(--accentink);
+  --color-accentsoft: var(--accentsoft);
+  --color-mint: var(--mint);
+  --color-amber: var(--amber);
+  --color-ambersoft: var(--ambersoft);
+  --color-danger: var(--danger);
+  --color-dangersoft: var(--dangersoft);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-tight), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex), ui-monospace, "SF Mono", Menlo, monospace;
+  --shadow-card: var(--shadow);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04";
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  ::selection {
+    background: var(--accentsoft);
+    color: var(--ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  button, a, input, select, textarea {
+    outline-color: var(--focus);
+  }
+}
+
+@layer components {
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-card);
+  }
+  .mono-num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .hairline {
+    border-color: var(--line);
+  }
+}
+
+@utility skeleton-pulse {
+  animation: payrail-skeleton 1.6s ease-in-out infinite;
+}
+@keyframes payrail-skeleton {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}

@@ -1,0 +1,19 @@
+packages:
+  - api
+  - contracts
+  - scripts
+  - mcp
+  - web
+
+allowBuilds:
+  esbuild: true
+  bufferutil: true
+  utf-8-validate: true
+  better-sqlite3: true
+  keccak: true
+  unrs-resolver: true
+  secp256k1: true
+
+peerDependencyRules:
+  allowedVersions:
+    utf-8-validate: "*"

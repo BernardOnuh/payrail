@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.env
+.env.local
+*.tsbuildinfo
+.next/
+web/.data/
+# local runtime databases
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
+# regenerable build outputs / dev scratch
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/
+api/scratch-*.ts
+scripts/db/
