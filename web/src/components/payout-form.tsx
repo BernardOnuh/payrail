@@ -30,6 +30,13 @@ function currencyDec(chain: ChainName, token: TokenName): number {
   return tokensFor(chain).find((t) => t.key === token)?.decimals ?? 6;
 }
 
+// Base mainnet's pool pair sorts WETH before USDC, so USDC-funded plans
+// cannot swap on that chain; only USDC payouts (batch transfers) are allowed.
+function currenciesFor(chain: ChainName): { key: TokenName; decimals: number }[] {
+  const tokens = tokensFor(chain);
+  return chain === "base" ? tokens.filter((t) => t.key === "USDC") : tokens;
+}
+
 function safeBase(amount: string, dec: number): bigint {
   try {
     return toBaseUnits(amount, dec);
@@ -54,6 +61,10 @@ export function PayoutForm() {
 
   const onChainChange = async (value: ChainName) => {
     setChain(value);
+    if (value === "base") {
+      setSource("USDC");
+      setRows([newRow("USDC")]);
+    }
     await switchWalletTo(value);
   };
 
@@ -188,7 +199,7 @@ export function PayoutForm() {
                 onChange={(e) => setSource(e.target.value as TokenName)}
                 className="flex h-9 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink"
               >
-                {tokensFor(chain).map((t) => (
+                {currenciesFor(chain).map((t) => (
                   <option key={t.key} value={t.key}>
                     {t.key}
                   </option>
@@ -249,7 +260,7 @@ export function PayoutForm() {
                     className="flex h-9 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink"
                     onChange={(e) => onRowChange(r.id, { currency: e.target.value as TokenName })}
                   >
-                    {tokensFor(chain).map((t) => (
+                    {currenciesFor(chain).map((t) => (
                       <option key={t.key} value={t.key}>
                         {t.key}
                       </option>

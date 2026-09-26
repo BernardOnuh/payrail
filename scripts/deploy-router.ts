@@ -83,17 +83,17 @@ type DeployTarget = {
 
 function target(): DeployTarget {
   if (chainFlag === "base-mainnet") {
-    // 0x833589.. (USDC) < 0x4200.. (WETH): already sorted.
+    // 0x4200.. (WETH) < 0x833589.. (USDC): token0 = WETH, token1 = USDC.
     return {
       name: "Base Mainnet",
       wallet: requireBaseMainnetWallet(),
       routerEnvKey: "PAYRAIL_ROUTER_ADDRESS_BASE",
-      token0: BASE_MAINNET_USDC_ADDRESS,
-      token1: BASE_MAINNET_WETH_ADDRESS,
-      token0Name: "USDC",
-      token1Name: "WETH",
-      seed0: argBig("--seed-pair0", 10n * USDC_DECS),
-      seed1: argBig("--seed-pair1", 10_000_000_000_000_000n), // 0.01 ETH of WETH
+      token0: BASE_MAINNET_WETH_ADDRESS,
+      token1: BASE_MAINNET_USDC_ADDRESS,
+      token0Name: "WETH",
+      token1Name: "USDC",
+      seed0: argBig("--seed-pair0", 10_000_000_000_000_000n), // 0.01 ETH worth of WETH
+      seed1: argBig("--seed-pair1", 10n * USDC_DECS),
     };
   }
   if (chainFlag === "base-sepolia") {

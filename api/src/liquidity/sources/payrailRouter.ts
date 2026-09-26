@@ -51,8 +51,15 @@ export function buildRouterSource(dep: RouterDep): LiquiditySource {
     return routerAddressFor(chain);
   }
 
-  /** Amounts are denominated in token0 = USDC (6-dec) for the input side. */
+  /**
+   * Amounts are denominated in token0 for the input side. The deployed
+   * router only swaps token0 -> token1; on Base mainnet WETH sorts before
+   * native USDC (0x4200.. < 0x8335..), so USDC is token1 and the pool would
+   * sell WETH for USDC — the wrong direction for USDC-funded plans. Swaps are
+   * therefore disabled on Base mainnet; USDC-only batch payouts still work.
+   */
   function supports(chain: ChainKey, tokenIn: string, tokenOut: string): boolean {
+    if (chain === "base") return false;
     const router = routerFor(chain);
     if (!router) return false;
     // tokenIn must be USDC (the pair's token0) for this deterministic pool.
