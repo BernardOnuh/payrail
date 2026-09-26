@@ -1,0 +1,14 @@
+# Payrail API on Railway. Set service env vars in the dashboard:
+#   PAYRAIL_PORT, PAYRAIL_DB_PATH (persistent volume), PAYRAIL_QUOTE_TTL_SECONDS,
+#   PAYRAIL_OPERATOR_KEY, PAYRAIL_ROUTER_ADDRESS_TESTNET,
+#   PAYRAIL_ROUTER_ADDRESS_BASESEPOLIA, PUBLIC_API_URL
+# Add a Volume mounted at /data and point PAYRAIL_DB_PATH=/data/payrail.sqlite.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

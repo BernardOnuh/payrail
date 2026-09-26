@@ -56,6 +56,28 @@ node payrail/mcp/dist/index.js   # stdio MCP server, PAYRAIL_MCP_CHAIN=testnet|b
 
 Point an MCP-host (Claude, etc.) at the built server. See `web/src/components/agent-panel.tsx` or `mcp/README.md` for a ready-to-paste config.
 
+## Deployment
+
+Two deployables: the **API** (stateless process + SQLite volume) and the **web**
+(Next.js). They talk over HTTP; CORS is wide open for the demo.
+
+### API — Railway (or any Docker host)
+
+1. Give Railway this repo. The root `Dockerfile` + `railway.toml` run `node api/dist/main.js` (`/health` probe).
+2. Set env vars (see `api/.env.example`): `PAYRAIL_PORT`, `PAYRAIL_DB_PATH` (point at a mounted volume, e.g. `/data/payrail.sqlite`), `PAYRAIL_OPERATOR_KEY`, `PAYRAIL_ROUTER_ADDRESS_TESTNET`, `PAYRAIL_ROUTER_ADDRESS_BASESEPOLIA`, `PUBLIC_API_URL`.
+3. On any other host: `docker build -t payrail-api . && docker run -p 3033:3033 -e ... -v payrail-data:/data payrail-api`.
+
+### Web — Vercel
+
+1. Import the repo; Vercel auto-detects Next.js (`web/` is the project root).
+2. Set env vars from `web/.env.example`:
+   - `PAYRAIL_MODE=api`
+   - `PAYRAIL_API_URL=https://<your-railway-url>`
+   - `PAYRAIL_API_KEY=<key created on the /keys page>`
+   - `NEXT_PUBLIC_CHAIN_*` (Arc mainnet/testnet + Base Sepolia RPCs/explorers)
+   - `NEXT_PUBLIC_PAYRAIL_DEFAULT_CHAIN=testnet`
+3. Deploy. Wallet connect uses site-injected wallets by default (RainbowKit placeholder `projectId`); add a real WalletConnect projectId to `web/src/lib/wagmi.ts` if you want QR/mobile connect.
+
 ## Security notes
 
 - API keys are stored hashed (SHA-256); never recoverable.
