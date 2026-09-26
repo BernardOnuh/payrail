@@ -1,0 +1,13 @@
+.git
+.gitignore
+node_modules
+**/node_modules
+**/dist
+web/.next
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+.env
+.env.local
+**/.env
+.DS_Store
