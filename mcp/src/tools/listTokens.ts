@@ -11,7 +11,7 @@ export type ListSupportedTokensArgs = z.output<typeof argsSchema>;
 export function listSupportedTokensDescription(chain: McpConfigParsed["chain"]): string {
   const gas = getChain(chain).gasToken;
   const arcSpecific =
-    chain !== "basesepolia"
+    getChain(chain).gasToken.symbol === "USDC"
       ? " USDC is special on Arc: it is the native gas/payment token with 18 decimals at the ERC-20 view (same balance as the native 18-decimal representation)."
       : "";
   return [

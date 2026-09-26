@@ -138,6 +138,7 @@ export function routerAddressFor(chain: ChainKey): Hex | undefined {
     mainnet: "PAYRAIL_ROUTER_ADDRESS_MAINNET",
     testnet: "PAYRAIL_ROUTER_ADDRESS_TESTNET",
     basesepolia: "PAYRAIL_ROUTER_ADDRESS_BASESEPOLIA",
+    base: "PAYRAIL_ROUTER_ADDRESS_BASE",
   };
   const raw = process.env[envKeys[chain]];
   if (!raw) return undefined;

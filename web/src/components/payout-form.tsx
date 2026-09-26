@@ -169,9 +169,9 @@ export function PayoutForm() {
                 onChange={(e) => setChain(e.target.value as ChainName)}
                 className="flex h-9 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink"
               >
-                {(["testnet", "mainnet", "basesepolia"] as ChainName[]).map((c) => (
+                {(["testnet", "mainnet", "basesepolia", "base"] as ChainName[]).map((c) => (
                   <option key={c} value={c}>
-                    {chainDisplayName(c)}{c === "testnet" ? " (safe)" : c === "mainnet" ? " (real funds)" : " (safe)"}
+                    {chainDisplayName(c)}{c === "testnet" || c === "basesepolia" ? " (safe)" : " (real funds)"}
                   </option>
                 ))}
               </select>

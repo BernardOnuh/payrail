@@ -3,7 +3,7 @@
 import { http } from "wagmi";
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { braveWallet, coinbaseWallet, injectedWallet, metaMaskWallet, rabbyWallet } from "@rainbow-me/rainbowkit/wallets";
-import { arcMainnet, arcTestnet, baseSepolia } from "@/lib/registry";
+import { arcMainnet, arcTestnet, baseSepolia, baseMainnet } from "@/lib/registry";
 
 /**
  * wagmi is configured from env values (see .env.example) through the registry —
@@ -20,12 +20,13 @@ const projectId = "00000000000000000000000000000000";
 export const wagmiConfig = getDefaultConfig({
   appName: "Payrail",
   projectId,
-  chains: [arcMainnet, arcTestnet, baseSepolia],
+  chains: [arcMainnet, arcTestnet, baseSepolia, baseMainnet],
   ssr: true,
   transports: {
     [arcMainnet.id]: http(arcMainnet.rpcUrls.default.http[0], { batch: true }),
     [arcTestnet.id]: http(arcTestnet.rpcUrls.default.http[0], { batch: true }),
     [baseSepolia.id]: http(baseSepolia.rpcUrls.default.http[0], { batch: true }),
+    [baseMainnet.id]: http(baseMainnet.rpcUrls.default.http[0], { batch: true }),
   },
   wallets: [
     {

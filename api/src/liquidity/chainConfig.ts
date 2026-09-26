@@ -16,7 +16,7 @@ import {
  *  - Uniswap v4 mainnet addresses: code presence confirmed on-chain; testnet NOT confirmed.
  */
 
-export const CHAIN_KEYS: ChainKey[] = ["mainnet", "testnet", "basesepolia"];
+export const CHAIN_KEYS: ChainKey[] = ["mainnet", "testnet", "basesepolia", "base"];
 
 export const TOKEN_KEYS: TokenKey[] = ["USDC", "EURC", "cirBTC", "WETH"];
 
@@ -92,6 +92,21 @@ const basesepoliaTokens: Partial<Record<TokenKey, TokenInfo>> = {
   },
 };
 
+const baseTokens: Partial<Record<TokenKey, TokenInfo>> = {
+  USDC: {
+    key: "USDC",
+    address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    decimals: 6,
+    verified: true,
+  },
+  WETH: {
+    key: "WETH",
+    address: "0x4200000000000000000000000000000000000006",
+    decimals: 18,
+    verified: true,
+  },
+};
+
 export const CHAIN_CONFIG: Record<ChainKey, ChainConfig> = {
   mainnet: {
     key: "mainnet",
@@ -127,6 +142,15 @@ export const CHAIN_CONFIG: Record<ChainKey, ChainConfig> = {
     minGasGwei: 0.05,
     gasToken: { symbol: "ETH", decimals: 18, address: null },
     tokens: basesepoliaTokens,
+  },
+  base: {
+    key: "base",
+    chainId: 8453,
+    rpcUrl: "https://mainnet.base.org",
+    explorerUrl: "https://basescan.org",
+    minGasGwei: 1,
+    gasToken: { symbol: "ETH", decimals: 18, address: null },
+    tokens: baseTokens,
   },
 };
 

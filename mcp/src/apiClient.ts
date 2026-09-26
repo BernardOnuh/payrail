@@ -17,7 +17,7 @@ export class ApiError extends Error {
 
 export interface QuoteWire {
   source: string;
-  chain: "mainnet" | "testnet" | "basesepolia";
+  chain: "mainnet" | "testnet" | "basesepolia" | "base";
   tokenIn: string;
   tokenOut: string;
   amountIn: string;
@@ -30,7 +30,7 @@ export interface QuoteWire {
 }
 
 export interface QuoteResponseWire {
-  chain: "mainnet" | "testnet" | "basesepolia";
+  chain: "mainnet" | "testnet" | "basesepolia" | "base";
   tokenIn: string;
   tokenOut: string;
   amountIn: string;
@@ -49,7 +49,7 @@ export interface PlanStepWire {
 
 export interface PlanWire {
   planId: string;
-  chain: "mainnet" | "testnet" | "basesepolia";
+  chain: "mainnet" | "testnet" | "basesepolia" | "base";
   payer: `0x${string}`;
   sourceToken: string;
   memo: string | null;
@@ -79,7 +79,7 @@ export interface PlanStateStepWire extends PlanStepWire {
 export interface PlanStateWire {
   planId: string;
   status: "created" | "inProgress" | "final" | "failed";
-  chain: "mainnet" | "testnet" | "basesepolia";
+  chain: "mainnet" | "testnet" | "basesepolia" | "base";
   payer: `0x${string}`;
   sourceToken: string;
   memo: string | null;
@@ -97,7 +97,7 @@ export interface PlanStateWire {
 }
 
 export interface QuoteRequestBody {
-  chain: "mainnet" | "testnet" | "basesepolia";
+  chain: "mainnet" | "testnet" | "basesepolia" | "base";
   tokenIn: string;
   tokenOut: string;
   amount: string;
@@ -111,7 +111,7 @@ export interface PaymentInput {
 }
 
 export interface PayoutRequestBody {
-  chain: "mainnet" | "testnet" | "basesepolia";
+  chain: "mainnet" | "testnet" | "basesepolia" | "base";
   payer: `0x${string}`;
   sourceToken: string;
   memo?: string;
@@ -124,11 +124,11 @@ export interface PayoutRequestBody {
  */
 export class PayrailApiClient {
   readonly baseUrl: string;
-  readonly chain: "mainnet" | "testnet" | "basesepolia";
+  readonly chain: "mainnet" | "testnet" | "basesepolia" | "base";
   readonly apiKey: string | undefined;
   readonly timeoutMs: number;
 
-  constructor(opts: { baseUrl: string; chain: "mainnet" | "testnet" | "basesepolia"; apiKey?: string; timeoutMs?: number }) {
+  constructor(opts: { baseUrl: string; chain: "mainnet" | "testnet" | "basesepolia" | "base"; apiKey?: string; timeoutMs?: number }) {
     this.baseUrl = opts.baseUrl.replace(/\/$/, "");
     this.chain = opts.chain;
     this.apiKey = opts.apiKey;

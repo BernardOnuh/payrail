@@ -5,10 +5,10 @@ import { useAccount, useSwitchChain } from "wagmi";
 import { chainsByName, chainDisplayName, nameOfChainId, type ChainName } from "@/lib/registry";
 import { cx } from "@/lib/format";
 
-const CHAIN_ORDER: ChainName[] = ["testnet", "basesepolia", "mainnet"];
+const CHAIN_ORDER: ChainName[] = ["testnet", "basesepolia", "base", "mainnet"];
 
 function chainTag(c: ChainName): string {
-  return c === "testnet" ? "safe" : c === "basesepolia" ? "safe" : "real funds";
+  return c === "testnet" || c === "basesepolia" ? "safe" : "real funds";
 }
 
 export function ChainSwitcher() {

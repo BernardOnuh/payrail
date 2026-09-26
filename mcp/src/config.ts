@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const chainNameSchema = z.enum(["mainnet", "testnet", "basesepolia"]);
+const chainNameSchema = z.enum(["mainnet", "testnet", "basesepolia", "base"]);
 const tokenNameSchema = z.enum(["USDC", "EURC", "cirBTC", "WETH"]);
 
 const signerConfigSchema = z

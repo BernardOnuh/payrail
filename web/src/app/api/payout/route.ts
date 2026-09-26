@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as { chain: "mainnet" | "testnet" | "basesepolia"; payer: string; sourceToken: string; memo?: string; payments: { recipient: string; amount: string; currency: string }[] };
+    const body = (await req.json()) as { chain: "mainnet" | "testnet" | "basesepolia" | "base"; payer: string; sourceToken: string; memo?: string; payments: { recipient: string; amount: string; currency: string }[] };
     const result = await getProvider().createPayout(body as never);
     return Response.json(result);
   } catch (e) {

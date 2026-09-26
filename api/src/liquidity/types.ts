@@ -20,7 +20,7 @@
 export const USDC_ERC20_DECIMALS = 6;
 export const USDC_NATIVE_DECIMALS = 18;
 
-export type ChainKey = "mainnet" | "testnet" | "basesepolia";
+export type ChainKey = "mainnet" | "testnet" | "basesepolia" | "base";
 
 export type TokenKey = "USDC" | "EURC" | "cirBTC" | "WETH";
 

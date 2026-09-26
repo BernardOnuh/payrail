@@ -23,8 +23,8 @@ export function getPlanStatusDescription(chain: McpConfigParsed["chain"]): strin
     "Units: sourceTokenSpent is in base units of the plan's source token",
     "  (USDC/EURC 6 decimals, cirBTC 8, WETH 18); feesUsdc is in native USDC at 18 decimals;",
     `  estimatedGasUsdc is in base units of the gas currency (${gas.symbol}, ${gas.decimals} decimals on ${chain}).`,
-    chain === "basesepolia"
-      ? "On Base Sepolia, wait for several confirmations (reorgs are possible)."
+    chain === "basesepolia" || chain === "base"
+      ? "On Base (Sepolia or mainnet), wait for several confirmations (reorgs are possible)."
       : "On Arc, a transaction is final at the first receipt (deterministic finality, no reorgs).",
   ].join("\n");
 }

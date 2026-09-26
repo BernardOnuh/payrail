@@ -3,11 +3,12 @@
  * wallet from scripts/.env. Idempotent: skips deploy/seed when already present.
  * Seed amounts are modest so the payer keeps room for e2e assertions.
  *
- * Chains: arc-testnet (default), base-sepolia.
+ * Chains: arc-testnet (default), base-sepolia, base-mainnet.
  * Arc pair: USDC (native 0x3600..00) < EURC; Base pair: USDC < WETH.
+ * Base mainnet USDC: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913.
  *
  * Usage:
- *   tsx scripts/deploy-router.ts [--chain arc-testnet|base-sepolia]
+ *   tsx scripts/deploy-router.ts [--chain arc-testnet|base-sepolia|base-mainnet]
  *                                [--force-seed] [--seed-pair0 N] [--seed-pair1 N]
  */
 
@@ -18,11 +19,14 @@ import { encodeFunctionData, parseAbi } from "viem";
 import {
   requireWallet,
   requireBaseWallet,
+  requireBaseMainnetWallet,
   sendAndWait,
   USDC_ADDRESS,
   EURC_ADDRESS,
   BASE_USDC_ADDRESS,
   BASE_WETH_ADDRESS,
+  BASE_MAINNET_USDC_ADDRESS,
+  BASE_MAINNET_WETH_ADDRESS,
   erc20Abi,
   loadEnvFile,
   ENV_PATH,
@@ -52,11 +56,11 @@ const artifact = JSON.parse(
 
 const USDC_DECS = 1_000_000n; // 6-dec unit
 const argv = process.argv.slice(2);
-const chainFlag = ((): "arc-testnet" | "base-sepolia" => {
+const chainFlag = ((): "arc-testnet" | "base-sepolia" | "base-mainnet" => {
   const i = argv.indexOf("--chain");
   const v = i >= 0 ? argv[i + 1] : "arc-testnet";
-  if (v !== "arc-testnet" && v !== "base-sepolia") {
-    throw new Error(`unknown --chain ${v}; expected arc-testnet or base-sepolia`);
+  if (v !== "arc-testnet" && v !== "base-sepolia" && v !== "base-mainnet") {
+    throw new Error(`unknown --chain ${v}; expected arc-testnet, base-sepolia, or base-mainnet`);
   }
   return v;
 })();
@@ -78,6 +82,20 @@ type DeployTarget = {
 };
 
 function target(): DeployTarget {
+  if (chainFlag === "base-mainnet") {
+    // 0x833589.. (USDC) < 0x4200.. (WETH): already sorted.
+    return {
+      name: "Base Mainnet",
+      wallet: requireBaseMainnetWallet(),
+      routerEnvKey: "PAYRAIL_ROUTER_ADDRESS_BASE",
+      token0: BASE_MAINNET_USDC_ADDRESS,
+      token1: BASE_MAINNET_WETH_ADDRESS,
+      token0Name: "USDC",
+      token1Name: "WETH",
+      seed0: argBig("--seed-pair0", 10n * USDC_DECS),
+      seed1: argBig("--seed-pair1", 10_000_000_000_000_000n), // 0.01 ETH of WETH
+    };
+  }
   if (chainFlag === "base-sepolia") {
     // 0x036CbD.. (USDC) < 0x4200.. (WETH): already sorted.
     return {

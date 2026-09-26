@@ -34,9 +34,18 @@ export const baseSepolia = defineChain({
   rpcUrls: { default: { http: ["https://base-sepolia-rpc.publicnode.com"] } },
 });
 
+export const baseMainnet = defineChain({
+  id: 8453,
+  name: "Base",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: { default: { http: ["https://mainnet.base.org"] } },
+});
+
 export const USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as Hex;
 export const EURC_ADDRESS = "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" as Hex;
 export const BASE_USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e" as Hex;
+export const BASE_MAINNET_USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as Hex;
+export const BASE_MAINNET_WETH_ADDRESS = "0x4200000000000000000000000000000000000006" as Hex;
 export const BASE_WETH_ADDRESS = "0x4200000000000000000000000000000000000006" as Hex;
 
 export interface Wallet {
@@ -105,6 +114,17 @@ export function requireBaseWallet(): Wallet {
     throw new Error("scripts/.env missing BASE_SEPOLIA_* values");
   }
   return buildWallet(baseSepolia, privateKey, seedPhrase, address);
+}
+
+export function requireBaseMainnetWallet(): Wallet {
+  const env = loadEnvFile();
+  const privateKey = env.BASE_MAINNET_PRIVATE_KEY as Hex | undefined;
+  const seedPhrase = env.BASE_MAINNET_SEED_PHRASE;
+  const address = env.BASE_MAINNET_ADDRESS as Hex | undefined;
+  if (!privateKey || !seedPhrase || !address) {
+    throw new Error("scripts/.env missing BASE_MAINNET_* values (same wallet as BASE_SEPOLIA_* is fine)");
+  }
+  return buildWallet(baseMainnet, privateKey, seedPhrase, address);
 }
 
 export async function readNativeBalance(address: Hex): Promise<bigint> {

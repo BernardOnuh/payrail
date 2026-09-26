@@ -9,7 +9,7 @@
  */
 import { defineChain, type Chain } from "viem";
 
-export type ChainName = "mainnet" | "testnet" | "basesepolia";
+export type ChainName = "mainnet" | "testnet" | "basesepolia" | "base";
 export type TokenName = "USDC" | "EURC" | "cirBTC" | "WETH";
 
 export const NATIVE_USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as const;
@@ -32,6 +32,7 @@ export const CHAIN_LABEL: Record<ChainName, ChainLabel> = {
   mainnet: { display: "Arc Mainnet", gasSymbol: "USDC", gasDecimals: NATIVE_USDC_DECIMALS, minGasGwei: 1, ammCore: "router" },
   testnet: { display: "Arc Testnet", gasSymbol: "USDC", gasDecimals: NATIVE_USDC_DECIMALS, minGasGwei: 20, ammCore: "router" },
   basesepolia: { display: "Base Sepolia", gasSymbol: "ETH", gasDecimals: 18, minGasGwei: 1, ammCore: "router" },
+  base: { display: "Base", gasSymbol: "ETH", gasDecimals: 18, minGasGwei: 1, ammCore: "router" },
 };
 
 export interface TokenMeta {
@@ -58,6 +59,11 @@ const testnetTokens: Record<TokenName, TokenMeta> = {
 
 const basesepoliaTokens: Partial<Record<TokenName, TokenMeta>> = {
   USDC: { key: "USDC", address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", decimals: 6, note: "verified" },
+  WETH: { key: "WETH", address: "0x4200000000000000000000000000000000000006", decimals: 18, note: "verified" },
+};
+
+const baseTokens: Partial<Record<TokenName, TokenMeta>> = {
+  USDC: { key: "USDC", address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", decimals: 6, note: "verified" },
   WETH: { key: "WETH", address: "0x4200000000000000000000000000000000000006", decimals: 18, note: "verified" },
 };
 
@@ -100,12 +106,19 @@ export const CHAIN_SPEC: Record<ChainName, ChainEnvSpec> = {
     rpc: pick(process.env.NEXT_PUBLIC_CHAIN_BASESEPOLIA_RPC, "https://sepolia.base.org"),
     explorer: pick(process.env.NEXT_PUBLIC_CHAIN_BASESEPOLIA_EXPLORER, "https://sepolia.basescan.org"),
   },
+  base: {
+    name: "base",
+    id: int(process.env.NEXT_PUBLIC_CHAIN_BASE_ID, 8453).toString(),
+    rpc: pick(process.env.NEXT_PUBLIC_CHAIN_BASE_RPC, "https://mainnet.base.org"),
+    explorer: pick(process.env.NEXT_PUBLIC_CHAIN_BASE_EXPLORER, "https://basescan.org"),
+  },
 };
 
 export const TOKEN_SPEC: Record<ChainName, Partial<Record<TokenName, TokenMeta>>> = {
   mainnet: mainnetTokens,
   testnet: testnetTokens,
   basesepolia: basesepoliaTokens,
+  base: baseTokens,
 };
 
 export function tokensFor(chain: ChainName): TokenMeta[] {
@@ -164,10 +177,20 @@ export const baseSepolia: Chain = buildChain(CHAIN_SPEC.basesepolia, {
   testnet: true,
 });
 
+export const baseMainnet: Chain = buildChain(CHAIN_SPEC.base, {
+  display: "Base",
+  nativeName: "Ether",
+  nativeSymbol: "ETH",
+  nativeDecimals: 18,
+  explorerName: "BaseScan",
+  testnet: false,
+});
+
 export const chainsByName: Record<ChainName, Chain> = {
   mainnet: arcMainnet,
   testnet: arcTestnet,
   basesepolia: baseSepolia,
+  base: baseMainnet,
 };
 
 export function nameOfChainId(chainId: number | undefined): ChainName | null {
@@ -180,7 +203,7 @@ export function nameOfChainId(chainId: number | undefined): ChainName | null {
 
 export function defaultChainName(): ChainName {
   const v = process.env.NEXT_PUBLIC_PAYRAIL_DEFAULT_CHAIN;
-  return v === "mainnet" || v === "testnet" || v === "basesepolia" ? v : "testnet";
+  return v === "mainnet" || v === "testnet" || v === "basesepolia" || v === "base" ? v : "testnet";
 }
 
 export function chainDisplayName(name: ChainName): string {

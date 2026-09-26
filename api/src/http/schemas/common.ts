@@ -1,7 +1,7 @@
 import { z } from "@hono/zod-openapi";
 import { getAddress, isAddress } from "viem";
 
-export const CHAIN_KEYS = ["mainnet", "testnet", "basesepolia"] as const;
+export const CHAIN_KEYS = ["mainnet", "testnet", "basesepolia", "base"] as const;
 export type ChainName = (typeof CHAIN_KEYS)[number];
 
 export const TOKEN_KEYS = ["USDC", "EURC", "cirBTC", "WETH"] as const;
@@ -11,7 +11,7 @@ export const chainSchema = z.enum(CHAIN_KEYS).openapi({
   type: "string",
   enum: [...CHAIN_KEYS],
   description:
-    "Chain. mainnet = Arc 5042, testnet = Arc 5042002, basesepolia = Base 84532.",
+    "Chain. mainnet = Arc 5042, testnet = Arc 5042002, basesepolia = Base 84532, base = Base 8453.",
 });
 
 export const tokenSchema = z.enum(TOKEN_KEYS).openapi({

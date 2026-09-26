@@ -1,5 +1,5 @@
 /** Wire types mirroring the Payrail API (see api/src/http/schemas). */
-export type ChainName = "mainnet" | "testnet" | "basesepolia";
+export type ChainName = "mainnet" | "testnet" | "basesepolia" | "base";
 export type TokenName = "USDC" | "EURC" | "cirBTC" | "WETH";
 
 export interface QuoteRequest {
