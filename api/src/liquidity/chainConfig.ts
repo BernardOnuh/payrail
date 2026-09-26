@@ -16,7 +16,7 @@ import {
  *  - Uniswap v4 mainnet addresses: code presence confirmed on-chain; testnet NOT confirmed.
  */
 
-export const CHAIN_KEYS: ChainKey[] = ["mainnet", "testnet"];
+export const CHAIN_KEYS: ChainKey[] = ["mainnet", "testnet", "basesepolia"];
 
 export const TOKEN_KEYS: TokenKey[] = ["USDC", "EURC", "cirBTC", "WETH"];
 
@@ -77,6 +77,21 @@ const testnetTokens: Record<TokenKey, TokenInfo> = {
   },
 };
 
+const basesepoliaTokens: Partial<Record<TokenKey, TokenInfo>> = {
+  USDC: {
+    key: "USDC",
+    address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    decimals: 6,
+    verified: true,
+  },
+  WETH: {
+    key: "WETH",
+    address: "0x4200000000000000000000000000000000000006",
+    decimals: 18,
+    verified: true,
+  },
+};
+
 export const CHAIN_CONFIG: Record<ChainKey, ChainConfig> = {
   mainnet: {
     key: "mainnet",
@@ -84,6 +99,7 @@ export const CHAIN_CONFIG: Record<ChainKey, ChainConfig> = {
     rpcUrl: "https://rpc.mainnet.arc.io",
     explorerUrl: "https://explorer.arc.io",
     minGasGwei: 20,
+    gasToken: { symbol: "USDC", decimals: USDC_NATIVE_DECIMALS, address: USDC_NATIVE_ADDRESS },
     tokens: mainnetTokens,
     uniswap: {
       poolManager: "0x8366a39CC670B4001A1121B8F6A443A643e40951",
@@ -99,7 +115,18 @@ export const CHAIN_CONFIG: Record<ChainKey, ChainConfig> = {
     explorerUrl: "https://explorer.testnet.arc.io",
     faucetUrl: "https://faucet.circle.com",
     minGasGwei: 20,
+    gasToken: { symbol: "USDC", decimals: USDC_NATIVE_DECIMALS, address: USDC_NATIVE_ADDRESS },
     tokens: testnetTokens,
+  },
+  basesepolia: {
+    key: "basesepolia",
+    chainId: 84532,
+    rpcUrl: "https://sepolia.base.org",
+    explorerUrl: "https://sepolia.basescan.org",
+    faucetUrl: "https://www.base.org/faucets",
+    minGasGwei: 0.05,
+    gasToken: { symbol: "ETH", decimals: 18, address: null },
+    tokens: basesepoliaTokens,
   },
 };
 

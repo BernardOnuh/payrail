@@ -67,6 +67,7 @@ export function planStateToWire(s: PlanState): PlanStateParsed {
       ) as Record<TokenName, string>,
       feesUsdc: s.totals.feesUsdc.toString(),
       estimatedGasUsdc: s.totals.estimatedGasUsdc.toString(),
+      gasToken: { symbol: s.totals.gasToken.symbol, decimals: s.totals.gasToken.decimals },
     },
     warnings: s.warnings,
     createdAt: s.createdAt,

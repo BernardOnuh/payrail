@@ -33,7 +33,12 @@ export interface PayrailProvider {
   readonly mode: "mock" | "api";
   health(): Promise<Health>;
   quote(req: QuoteRequest): Promise<QuoteResponse>;
-  estimatePayout(req: { chain: "mainnet" | "testnet"; sourceToken: "USDC" | "EURC" | "cirBTC" | "WETH"; payer?: string; payments: { recipient: `0x${string}`; amount: string; currency: "USDC" | "EURC" | "cirBTC" | "WETH" }[] }): Promise<PayoutEstimate>;
+  estimatePayout(req: {
+    chain: "mainnet" | "testnet" | "basesepolia";
+    sourceToken: "USDC" | "EURC" | "cirBTC" | "WETH";
+    payer?: string;
+    payments: { recipient: `0x${string}`; amount: string; currency: "USDC" | "EURC" | "cirBTC" | "WETH" }[];
+  }): Promise<PayoutEstimate>;
   createPayout(req: PayoutRequest): Promise<PayoutResponse>;
   getPlan(id: string): Promise<PlanState>;
   submitStep(id: string, body: SubmitStep): Promise<SubmitStepResponse>;

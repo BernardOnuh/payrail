@@ -17,7 +17,7 @@ export function signPlanDescription(): string {
     "DEMO/DEV ONLY: sign the unsigned steps of an existing plan with the dedicated low-balance demo wallet.",
     "This tool is registered ONLY when MCP_SIGNER_ENABLED=true. It:",
     "  - REFUSES to sign if the plan total exceeds MCP_SIGNER_MAX_TOTAL_USDC (cap, in USDC base units).",
-    "  - REFUSES non-USDC-source plans (USDC is the native gas token on Arc).",
+    "  - REFUSES non-USDC-source plans (this build only signs USDC-source flows).",
     "  - REFUSES if the plan payer is not the demo wallet.",
     "  - records every signature to the signature log (stderr + optional NDJSON file).",
     "",

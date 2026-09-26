@@ -9,7 +9,7 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { getChain } from "@payrail/api/liquidity";
 import type { ChainName } from "../config.js";
-import { arcViemChain } from "./chain.js";
+import { buildViemChain } from "./chain.js";
 
 /** One JSON line per signature, written to stderr and/or an NDJSON file. */
 export interface SignerLogSink {
@@ -68,8 +68,8 @@ export interface SignerConfig {
 /**
  * Demo-only signer: a dedicated low-balance wallet that signs (and optionally
  * broadcasts) a plan's unsigned steps. It REFUSES to sign when:
- *   - the plan sources from anything other than USDC (approval gas handling
- *     is USDC-native only in this build), or
+ *   - the plan sources from anything other than USDC (this build keeps the
+ *     demo surface small; USDC is also what the demo faucet drips), or
  *   - the plan total (sourceTokenSpent) exceeds the configured cap.
  *   - the plan payer is not this wallet's address.
  * Every signature attempt is logged (stderr + optional NDJSON file).
@@ -97,7 +97,7 @@ export class DemoSigner {
     this.capUsdc = cfg.capUsdc;
     this.broadcast = cfg.broadcast;
     this.log = cfg.logSink;
-    this.viemChain = arcViemChain(cfg.chain);
+    this.viemChain = buildViemChain(cfg.chain);
     this.explorerUrl = this.chainConfig.explorerUrl;
     this.minGasGwei = BigInt(this.chainConfig.minGasGwei);
     const transport = http(cfg.rpcUrl ?? this.chainConfig.rpcUrl);
@@ -114,7 +114,7 @@ export class DemoSigner {
     if (plan.totals.sourceToken !== "USDC") {
       throw new SignerRefusal(
         "UNSUPPORTED_SOURCE",
-        `The signer only handles USDC-source plans (gas is USDC native on Arc). This plan sources ${plan.totals.sourceToken}.`,
+        `The signer only handles USDC-source plans in this build. This plan sources ${plan.totals.sourceToken}.`,
         { sourceToken: plan.totals.sourceToken },
       );
     }

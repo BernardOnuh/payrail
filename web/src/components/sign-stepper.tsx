@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { parseGwei } from "viem";
 import { useAccount, usePublicClient, useSwitchChain, useWalletClient } from "wagmi";
 import { api, ApiError } from "@/lib/client/api";
-import { CHAIN_SPEC, nameOfChainId } from "@/lib/registry";
+import { CHAIN_LABEL, CHAIN_SPEC, nameOfChainId } from "@/lib/registry";
 import type { PlanState, StepState } from "@/lib/payrail/types";
 import { Button, Card, CardTitle } from "./ui";
 import { ConnectionDot, StatusDot } from "./status";
@@ -85,7 +85,7 @@ export function SignStepper({ plan, onAllConfirmed }: { plan: PlanState; onAllCo
             data: step.tx.data,
             value: nativeValue,
             gas,
-            maxFeePerGas: parseGwei("20"),
+            maxFeePerGas: parseGwei(String(CHAIN_LABEL[targetName].minGasGwei)),
             maxPriorityFeePerGas: 0n,
           });
         } catch (e) {

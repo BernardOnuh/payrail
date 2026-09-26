@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isAddress, getAddress } from "viem";
+import { getChain } from "@payrail/api/liquidity";
 import type { PayrailApiClient } from "../apiClient.js";
 import type { McpConfigParsed } from "../config.js";
 import { decimalsFor, humanAmount } from "../format.js";
@@ -136,6 +137,7 @@ export async function createPayoutPlanHandler(
       ),
       feesUsdc: humanAmount(plan.totals.feesUsdc, 18),
       estimatedGasUsdc: humanAmount(plan.totals.estimatedGasUsdc, 18),
+      gasToken: plan.totals.gasToken ?? { symbol: getChain(config.chain).gasToken.symbol, decimals: 18 },
     },
     steps: plan.steps.map((s) => ({
       type: s.type,

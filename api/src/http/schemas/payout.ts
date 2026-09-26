@@ -3,6 +3,7 @@ import {
   addressSchema,
   amountSchema,
   chainSchema,
+  gasTokenSchema,
   hexDataSchema,
   isoDateTimeSchema,
   requestIdSchema,
@@ -100,8 +101,10 @@ export const planTotalsSchema = z.object({
   payouts: z.record(tokenSchema, wireAmountSchema),
   /** Total non-gas fees, native USDC (18-dec). */
   feesUsdc: wireAmountSchema,
-  /** Estimated gas, native USDC (18-dec). */
+  /** Estimated gas in `gasToken` base units (native USDC on Arc, ETH on Base). */
   estimatedGasUsdc: wireAmountSchema,
+  /** Currency the wallet must hold for gas; also labels `estimatedGasUsdc`. */
+  gasToken: gasTokenSchema,
 }).openapi("PlanTotals");
 
 export type PlanTotalsParsed = z.output<typeof planTotalsSchema>;
@@ -137,6 +140,8 @@ export const estimateResponseSchema = z.object({
   sourceNeeded: z.record(tokenSchema, wireAmountSchema),
   estimatedGasUsdc: wireAmountSchema,
   feesUsdc: wireAmountSchema,
+  /** Currency the wallet must hold for gas; also labels `estimatedGasUsdc`. */
+  gasToken: gasTokenSchema,
   stepsPreview: z.array(
     z.object({
       type: z.enum(["approve", "swap", "batchPayout"]),

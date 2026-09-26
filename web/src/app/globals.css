@@ -74,7 +74,7 @@
   --color-danger: var(--danger);
   --color-dangersoft: var(--dangersoft);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-tight), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-grotesk), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex), ui-monospace, "SF Mono", Menlo, monospace;
   --shadow-card: var(--shadow);
 }
@@ -88,10 +88,12 @@
     color: var(--ink);
     font-family: var(--font-sans);
     font-feature-settings: "cv02", "cv03", "cv04";
+    text-rendering: optimizeLegibility;
   }
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.012em;
+    font-feature-settings: "ss01", "cv05";
   }
   ::selection {
     background: var(--accentsoft);
@@ -120,6 +122,106 @@
   }
   .hairline {
     border-color: var(--line);
+  }
+  .aura {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .aura-blob {
+    position: absolute;
+    border-radius: 60% 40% 55% 45% / 50% 55% 45% 50%;
+    background-image: radial-gradient(circle at 48% 42%, var(--blob-stops));
+    filter: blur(40px);
+    mix-blend-mode: multiply;
+    will-change: opacity;
+  }
+  .dark .aura-blob {
+    background-image: radial-gradient(circle at 48% 42%, var(--blob-stops-dark));
+    mix-blend-mode: screen;
+  }
+  .aura-band {
+    position: absolute;
+    left: -18vw;
+    width: 46vw;
+    height: 30vh;
+    border-radius: 50%;
+    background-image: radial-gradient(ellipse at 50% 50%, var(--blob-stops));
+    filter: blur(14px);
+    mix-blend-mode: multiply;
+    will-change: transform;
+    animation-name: aura-stream;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+  .dark .aura-band {
+    background-image: radial-gradient(ellipse at 50% 50%, var(--blob-stops-dark));
+    mix-blend-mode: screen;
+  }
+  .aura-flow {
+    position: absolute;
+    inset: 0;
+  }
+  .aura-flow,
+  .aura-flow .aura-blob,
+  .aura-flow .aura-band {
+    backface-visibility: hidden;
+  }
+  .aura-grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.02;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .aura-band {
+      animation: none;
+      opacity: 0;
+    }
+  }
+}
+
+.holo-card {
+  position: relative;
+}
+.holo-hairline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.55;
+}
+.holo-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.holo-energy {
+  position: absolute;
+  left: 7px;
+  top: 18px;
+  bottom: 34px;
+  width: 1px;
+  background: var(--line);
+  opacity: 0.9;
+}
+
+@keyframes aura-stream {
+  0% {
+    transform: translate3d(-30vw, 0, 0);
+  }
+  100% {
+    transform: translate3d(120vw, 0, 0);
   }
 }
 

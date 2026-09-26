@@ -17,7 +17,7 @@ export class ApiError extends Error {
 
 export interface QuoteWire {
   source: string;
-  chain: "mainnet" | "testnet";
+  chain: "mainnet" | "testnet" | "basesepolia";
   tokenIn: string;
   tokenOut: string;
   amountIn: string;
@@ -30,7 +30,7 @@ export interface QuoteWire {
 }
 
 export interface QuoteResponseWire {
-  chain: "mainnet" | "testnet";
+  chain: "mainnet" | "testnet" | "basesepolia";
   tokenIn: string;
   tokenOut: string;
   amountIn: string;
@@ -49,7 +49,7 @@ export interface PlanStepWire {
 
 export interface PlanWire {
   planId: string;
-  chain: "mainnet" | "testnet";
+  chain: "mainnet" | "testnet" | "basesepolia";
   payer: `0x${string}`;
   sourceToken: string;
   memo: string | null;
@@ -60,6 +60,7 @@ export interface PlanWire {
     payouts: Record<string, string>;
     feesUsdc: string;
     estimatedGasUsdc: string;
+    gasToken?: { symbol: string; decimals: number };
   };
   quoteExpiresAt: string;
   warnings: string[];
@@ -78,7 +79,7 @@ export interface PlanStateStepWire extends PlanStepWire {
 export interface PlanStateWire {
   planId: string;
   status: "created" | "inProgress" | "final" | "failed";
-  chain: "mainnet" | "testnet";
+  chain: "mainnet" | "testnet" | "basesepolia";
   payer: `0x${string}`;
   sourceToken: string;
   memo: string | null;
@@ -96,7 +97,7 @@ export interface PlanStateWire {
 }
 
 export interface QuoteRequestBody {
-  chain: "mainnet" | "testnet";
+  chain: "mainnet" | "testnet" | "basesepolia";
   tokenIn: string;
   tokenOut: string;
   amount: string;
@@ -110,7 +111,7 @@ export interface PaymentInput {
 }
 
 export interface PayoutRequestBody {
-  chain: "mainnet" | "testnet";
+  chain: "mainnet" | "testnet" | "basesepolia";
   payer: `0x${string}`;
   sourceToken: string;
   memo?: string;
@@ -123,11 +124,11 @@ export interface PayoutRequestBody {
  */
 export class PayrailApiClient {
   readonly baseUrl: string;
-  readonly chain: "mainnet" | "testnet";
+  readonly chain: "mainnet" | "testnet" | "basesepolia";
   readonly apiKey: string | undefined;
   readonly timeoutMs: number;
 
-  constructor(opts: { baseUrl: string; chain: "mainnet" | "testnet"; apiKey?: string; timeoutMs?: number }) {
+  constructor(opts: { baseUrl: string; chain: "mainnet" | "testnet" | "basesepolia"; apiKey?: string; timeoutMs?: number }) {
     this.baseUrl = opts.baseUrl.replace(/\/$/, "");
     this.chain = opts.chain;
     this.apiKey = opts.apiKey;

@@ -13,7 +13,7 @@ import type {
 } from "@/lib/payrail/types";
 
 export type PayoutInput = {
-  chain: "mainnet" | "testnet";
+  chain: "mainnet" | "testnet" | "basesepolia";
   payer: string;
   sourceToken: string;
   memo?: string;
@@ -21,7 +21,7 @@ export type PayoutInput = {
 };
 
 export type EstimateInput = {
-  chain: "mainnet" | "testnet";
+  chain: "mainnet" | "testnet" | "basesepolia";
   sourceToken: string;
   payer?: string;
   payments: { recipient: string; amount: string; currency: string }[];

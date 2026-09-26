@@ -14,16 +14,15 @@
 
 import { encodeFunctionData } from "viem";
 import { erc20Abi, payrailRouterAbi } from "../liquidity/abi.js";
-import { getToken } from "../liquidity/chainConfig.js";
+import { getChain, getToken } from "../liquidity/chainConfig.js";
 import { inputFee, inputForExactOutput, outputForExactInput } from "../liquidity/poolMath.js";
 import { routerSourceName } from "../liquidity/sources/payrailRouter.js";
-import { USDC_NATIVE_DECIMALS, type ChainKey, type Hex, type TokenKey } from "../liquidity/types.js";
+import { type ChainKey, type Hex, type TokenKey } from "../liquidity/types.js";
 import type { PayoutRequestParsed, PaymentParsed } from "../http/schemas/payout.js";
 import type { DomainStep, Plan, PlanStepState, PlanState, PlanTotals } from "../http/planModel.js";
 import type { Net } from "../net.js";
 import { quoteFailed } from "../errors.js";
 
-const SOURCE_TO_NATIVE_FACTOR = 10n ** BigInt(USDC_NATIVE_DECIMALS - 6); // 1e12 (6-dec -> 18-dec)
 const GAS_MARGIN = 130n; // 1.30x on estimated gas
 
 export interface BuildDeps {
@@ -61,6 +60,10 @@ export async function buildPlan(req: PayoutRequestParsed, deps: BuildDeps): Prom
   }
 
   const usdcInfo = getToken(chain, "USDC");
+  const gasToken = getChain(chain).gasToken;
+  // Express swap fees (USDC base units) in gas-token base units so totals are
+  // comparable: native USDC on Arc (18-dec) and ETH on Base (18-dec).
+  const sourceToNative = 10n ** BigInt(gasToken.decimals - usdcInfo.decimals);
   const steps: DomainStep[] = [];
   const runner: Runner = {
     reserve0: res.reserve0,
@@ -119,16 +122,17 @@ export async function buildPlan(req: PayoutRequestParsed, deps: BuildDeps): Prom
     runner.gasTotal += await estimateTx(deps, chain, req.payer, usdcInfo.address, data);
   }
 
-  // 4) gas estimate in native USDC (18-dec): gas * basefee(wei) * margin.
-  const baseFeeGwei = await deps.net.baseFeeGwei(chain);
-  const estimatedGasUsdc = runner.gasTotal * GAS_MARGIN * baseFeeGwei * 1_000_000_000n;
+  // 4) gas estimate in chain gas-currency base units: gas * basefee(wei) * margin.
+  const baseFeeWei = await deps.net.baseFeeWei(chain);
+  const estimatedGasUsdc = runner.gasTotal * GAS_MARGIN * baseFeeWei;
 
   const totals: PlanTotals = {
     sourceToken: req.sourceToken,
     sourceTokenSpent: runner.payerUsdcSpent,
     payouts: runner.payouts,
-    feesUsdc: runner.swapFeeUsdc * SOURCE_TO_NATIVE_FACTOR,
+    feesUsdc: runner.swapFeeUsdc * sourceToNative,
     estimatedGasUsdc,
+    gasToken: { symbol: gasToken.symbol, decimals: gasToken.decimals },
   };
 
   const nowMs = Date.now();

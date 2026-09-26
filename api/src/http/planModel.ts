@@ -48,8 +48,10 @@ export interface PlanTotals {
   payouts: Partial<Record<TokenName, bigint>>;
   /** Total non-gas fees, native USDC (18-dec). */
   feesUsdc: bigint;
-  /** Estimated gas, native USDC (18-dec). */
+  /** Estimated gas in `gasToken` base units (native USDC on Arc, ETH on Base). */
   estimatedGasUsdc: bigint;
+  /** Currency the wallet needs to hold for gas. */
+  gasToken: { symbol: string; decimals: number };
 }
 
 /** A plan step persisted with its execution state (amounts are bigint). */

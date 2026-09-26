@@ -2,17 +2,32 @@ import type { Chain } from "viem";
 import { getChain } from "@payrail/api/liquidity";
 import type { ChainName } from "../config.js";
 
-/** Minimal viem Chain for Arc derived from the shared CHAIN_CONFIG (gateway is USDC). */
-export function arcViemChain(chain: ChainName): Chain {
+const ARC_NAMES: Record<ChainName, string> = {
+  mainnet: "Arc Mainnet",
+  testnet: "Arc Testnet",
+  basesepolia: "Arc Testnet",
+};
+
+const EXPLORER_NAMES: Record<ChainName, string> = {
+  mainnet: "Arc Explorer",
+  testnet: "Arc Explorer",
+  basesepolia: "BaseScan Sepolia",
+};
+
+/** Minimal viem Chain derived from the shared CHAIN_CONFIG (native currency + RPC + explorer). */
+export function buildViemChain(chain: ChainName): Chain {
   const cfg = getChain(chain);
+  const base = chain === "basesepolia";
   return {
     id: cfg.chainId,
-    name: chain === "mainnet" ? "Arc Mainnet" : "Arc Testnet",
-    nativeCurrency: { name: "USD Coin", symbol: "USDC", decimals: 18 },
+    name: base ? "Base Sepolia" : ARC_NAMES[chain],
+    nativeCurrency: base
+      ? { name: "Ether", symbol: "ETH", decimals: 18 }
+      : { name: "USD Coin", symbol: "USDC", decimals: 18 },
     rpcUrls: { default: { http: [cfg.rpcUrl] } },
     blockExplorers: {
-      default: { name: "Arc Explorer", url: cfg.explorerUrl },
+      default: { name: EXPLORER_NAMES[chain], url: cfg.explorerUrl },
     },
-    testnet: chain === "testnet",
+    testnet: chain !== "mainnet",
   } as const;
 }

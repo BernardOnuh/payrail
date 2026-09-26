@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const chainNameSchema = z.enum(["mainnet", "testnet"]);
+const chainNameSchema = z.enum(["mainnet", "testnet", "basesepolia"]);
 const tokenNameSchema = z.enum(["USDC", "EURC", "cirBTC", "WETH"]);
 
 const signerConfigSchema = z
@@ -16,7 +16,7 @@ const signerConfigSchema = z
       .string()
       .regex(/^[0-9]+$/)
       .optional(),
-    /** When true, signed transactions are broadcast and awaited (1 receipt = final on Arc). */
+    /** When true, signed transactions are broadcast and awaited (1 receipt = final). */
     broadcast: z.boolean().default(false),
     /** Optional path (NDJSON) to append one line per signature. */
     logFile: z.string().default(""),

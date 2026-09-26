@@ -68,7 +68,7 @@ export const healthRoute = createRoute({
         "application/json": {
           schema: z.object({
             ok: z.literal(true),
-            chain: z.enum(["mainnet", "testnet"]),
+            chain: z.enum(["mainnet", "testnet", "basesepolia"]),
             version: z.string(),
             uptimeSec: z.number(),
           }),

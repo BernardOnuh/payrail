@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAddress } from "viem";
-import { useAccount } from "wagmi";
+import { useAccount, useSwitchChain } from "wagmi";
 import { api, ApiError, type PayoutInput } from "@/lib/client/api";
-import { defaultChainName, nameOfChainId, tokensFor, type ChainName, type TokenName } from "@/lib/registry";
+import { chainDisplayName, chainsByName, defaultChainName, gasTokenFor, nameOfChainId, tokensFor, type ChainName, type TokenName } from "@/lib/registry";
 import { humanAmount, toBaseUnits } from "@/lib/format";
 import type { Payment, PayoutEstimate } from "@/lib/payrail/types";
 import { Button, Card, CardTitle, CopyButton } from "@/components/ui";
@@ -41,6 +41,21 @@ function safeBase(amount: string, dec: number): bigint {
 export function PayoutForm() {
   const router = useRouter();
   const { address, isConnected, chainId } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
+
+  const switchWalletTo = async (target: ChainName) => {
+    if (!isConnected) return;
+    try {
+      await switchChainAsync({ chainId: chainsByName[target].id });
+    } catch {
+      /* wallet rejected the switch; the mismatch notice below guides the user */
+    }
+  };
+
+  const onChainChange = async (value: ChainName) => {
+    setChain(value);
+    await switchWalletTo(value);
+  };
 
   const [chain, setChain] = useState<ChainName>(defaultChainName());
   const [source, setSource] = useState<TokenName>("USDC");
@@ -147,18 +162,26 @@ export function PayoutForm() {
         <Card>
           <CardTitle title="Deal" />
           <div className="grid gap-4 md:grid-cols-3">
-            <Field label="Chain" htmlFor="chain" hint="Testnet uses docs-only token addresses — safe to play.">
+            <Field label="Chain" htmlFor="chain" hint="Base Sepolia uses ETH for gas — keep a little for fees.">
               <select
                 id="chain"
                 value={chain}
                 onChange={(e) => setChain(e.target.value as ChainName)}
                 className="flex h-9 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink"
               >
-                <option value="testnet">Arc testnet (safe)</option>
-                <option value="mainnet">Arc mainnet (real funds)</option>
+                {(["testnet", "mainnet", "basesepolia"] as ChainName[]).map((c) => (
+                  <option key={c} value={c}>
+                    {chainDisplayName(c)}{c === "testnet" ? " (safe)" : c === "mainnet" ? " (real funds)" : " (safe)"}
+                  </option>
+                ))}
               </select>
+              {isConnected && walletChain !== chain ? (
+                <Button type="button" variant="secondary" size="sm" className="w-full" onClick={() => void switchWalletTo(chain)}>
+                  Switch wallet to {chainDisplayName(chain)}
+                </Button>
+              ) : null}
             </Field>
-            <Field label="Source token" htmlFor="source" hint="USDC is native gas — no approval step.">
+            <Field label="Source token" htmlFor="source" hint="USDC is native gas on Arc; on Base gas is ETH.">
               <select
                 id="source"
                 value={source}
@@ -305,6 +328,7 @@ function TotalsPanel({ totalsByCurrency, chain, estimate, estimateError, source,
   sourceDec: number;
 }) {
   const rows = [...totalsByCurrency.entries()];
+  const gas = estimate?.gasToken ?? gasTokenFor(chain);
   return (
     <div className="space-y-3">
       {rows.length === 0 ? (
@@ -327,7 +351,7 @@ function TotalsPanel({ totalsByCurrency, chain, estimate, estimateError, source,
         ) : estimate ? (
           <div className="grid gap-x-4 gap-y-1 text-[12.5px] sm:grid-cols-2">
             <EstimateLine label="Source needed" value={`${humanAmount(estimate.sourceNeeded[source] ?? "0", sourceDec)} ${source}`} />
-            <EstimateLine label="Est. gas" value={`${humanAmount(estimate.estimatedGasUsdc, 18)} USDC`} />
+            <EstimateLine label="Est. gas" value={`${humanAmount(estimate.estimatedGasUsdc, gas.decimals)} ${gas.symbol}`} />
             <EstimateLine label="Fees" value={`${humanAmount(estimate.feesUsdc, 18)} USDC`} />
             <EstimateLine label="Steps" value={`${estimate.stepsPreview.length}`} />
           </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePlans } from "@/lib/client/hooks";
-import { tokenFor } from "@/lib/registry";
+import { chainDisplayName, tokenFor } from "@/lib/registry";
 import { humanAmount, timeAgo, truncateAddress } from "@/lib/format";
 import { Card, CardTitle, EmptyState, Skeleton } from "./ui";
 import { PlanStatusBadge } from "./status";
@@ -95,7 +95,7 @@ function PlanRow({ plan }: { plan: RecentPlan }) {
       <td className="py-2.5 pr-3">
         <PlanStatusBadge status={plan.status} />
       </td>
-      <td className="py-2.5 pr-3 font-mono text-muted">{plan.chain}</td>
+      <td className="py-2.5 pr-3 font-mono text-muted">{chainDisplayName(plan.chain)}</td>
       <td className="py-2.5 pr-3 font-mono text-muted">{plan.sourceToken}</td>
       <td className="py-2.5 pr-3 text-right mono-num">
         {humanAmount(plan.sourceTokenSpent, dec)} {plan.sourceToken}

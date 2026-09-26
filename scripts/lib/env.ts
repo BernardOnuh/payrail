@@ -1,6 +1,8 @@
 /**
- * Shared script plumbing: .env parsing, Arc wallets, RPC clients.
- * Operates on the ARC testnet keyed from scripts/.env.
+ * Shared script plumbing: .env parsing, wallets, RPC clients.
+ * Chain-specific: Arc testnet (ARC_TESTNET_*) and Base Sepolia (BASE_SEPOLIA_*).
+ * The scripts never import @payrail/api at the module level: they re-derive
+ * the chain constants here so they run against a single commited contract ABI.
  */
 
 import fs from "node:fs";
@@ -11,6 +13,7 @@ import {
   createWalletClient,
   defineChain,
   http,
+  type Chain,
   type Hex,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -24,8 +27,17 @@ export const arcTestnet = defineChain({
   rpcUrls: { default: { http: ["https://rpc.testnet.arc.io"] } },
 });
 
+export const baseSepolia = defineChain({
+  id: 84532,
+  name: "Base Sepolia",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: { default: { http: ["https://base-sepolia-rpc.publicnode.com"] } },
+});
+
 export const USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as Hex;
 export const EURC_ADDRESS = "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" as Hex;
+export const BASE_USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e" as Hex;
+export const BASE_WETH_ADDRESS = "0x4200000000000000000000000000000000000006" as Hex;
 
 export interface Wallet {
   address: Hex;
@@ -36,10 +48,24 @@ export interface Wallet {
   walletClient: ReturnType<typeof makeClients>["walletClient"];
 }
 
-function makeClients(account: ReturnType<typeof privateKeyToAccount>) {
-  const publicClient = createPublicClient({ chain: arcTestnet, transport: http(arcTestnet.rpcUrls.default.http[0]) });
-  const walletClient = createWalletClient({ account, chain: arcTestnet, transport: http(arcTestnet.rpcUrls.default.http[0]) });
+function makeClients(account: ReturnType<typeof privateKeyToAccount>, chain: Chain = arcTestnet) {
+  const publicClient = createPublicClient({ chain, transport: http(chain.rpcUrls.default.http[0]) });
+  const walletClient = createWalletClient({ account, chain, transport: http(chain.rpcUrls.default.http[0]) });
   return { publicClient, walletClient };
+}
+
+function buildWallet(
+  chain: Chain,
+  privateKey: Hex,
+  seedPhrase: string,
+  address: Hex,
+): Wallet {
+  const account = privateKeyToAccount(privateKey);
+  if (account.address.toLowerCase() !== address.toLowerCase()) {
+    throw new Error("configured address does not match the private key");
+  }
+  const { publicClient, walletClient } = makeClients(account, chain);
+  return { address, privateKey, seedPhrase, account, publicClient, walletClient };
 }
 
 export function loadEnvFile(): Record<string, string> {
@@ -67,12 +93,18 @@ export function requireWallet(): Wallet {
   if (!privateKey || !seedPhrase || !address) {
     throw new Error("scripts/.env missing ARC_TESTNET_* values");
   }
-  const account = privateKeyToAccount(privateKey);
-  if (account.address.toLowerCase() !== address.toLowerCase()) {
-    throw new Error("ARC_TESTNET_ADDRESS does not match ARC_TESTNET_PRIVATE_KEY");
+  return buildWallet(arcTestnet, privateKey, seedPhrase, address);
+}
+
+export function requireBaseWallet(): Wallet {
+  const env = loadEnvFile();
+  const privateKey = env.BASE_SEPOLIA_PRIVATE_KEY as Hex | undefined;
+  const seedPhrase = env.BASE_SEPOLIA_SEED_PHRASE;
+  const address = env.BASE_SEPOLIA_ADDRESS as Hex | undefined;
+  if (!privateKey || !seedPhrase || !address) {
+    throw new Error("scripts/.env missing BASE_SEPOLIA_* values");
   }
-  const { publicClient, walletClient } = makeClients(account);
-  return { address, privateKey, seedPhrase, account, publicClient, walletClient };
+  return buildWallet(baseSepolia, privateKey, seedPhrase, address);
 }
 
 export async function readNativeBalance(address: Hex): Promise<bigint> {

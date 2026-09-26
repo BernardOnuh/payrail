@@ -26,6 +26,7 @@ import type {
   SubmitStepResponse,
 } from "../types";
 import { getAddress } from "viem";
+import { CHAIN_SPEC } from "@/lib/registry";
 import type { PayrailProvider, StreamSink } from "./provider";
 import type { ChainName, TokenName } from "../types";
 
@@ -417,12 +418,14 @@ export class MockProvider implements PayrailProvider {
     }
     const nSteps = new Set(Object.keys(perCurrencyTotals) as TokenName[]).size + (req.sourceToken !== "USDC" ? 1 : 0);
     const estimatedGas = BigInt(nSteps) * 2_000_000_000_000_000n + BigInt(req.payments.length) * 200_000_000_000_000n;
+    const gasToken = req.chain === "basesepolia" ? { symbol: "ETH", decimals: 18 } : { symbol: "USDC", decimals: 18 };
     return {
       chain: req.chain,
       sourceToken: req.sourceToken,
       perCurrencyTotals,
       sourceNeeded,
       estimatedGasUsdc: estimatedGas.toString(),
+      gasToken,
       feesUsdc: ((BigInt(nSteps) + BigInt(req.payments.length)) * 90_000_000_000_000n).toString(),
       stepsPreview: [
         ...(req.sourceToken !== "USDC" ? [{ type: "approve" as const, description: `Approve ${req.sourceToken} for the swap router` }] : []),
@@ -465,7 +468,7 @@ export class MockProvider implements PayrailProvider {
       step.status = "submitted";
       step.txHash = body.txHash;
       step.submittedAt = nowIso();
-      step.explorerUrl = `https://explorer.${found.plan.chain}.arc.io/tx/${body.txHash}`;
+      step.explorerUrl = `${CHAIN_SPEC[found.plan.chain].explorer}/tx/${body.txHash}`;
       found.plan.updatedAt = nowIso();
       found.plan.status = found.plan.status === "created" ? "inProgress" : found.plan.status;
       saveStore();

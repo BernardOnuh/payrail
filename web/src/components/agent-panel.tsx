@@ -26,38 +26,37 @@ const CLAUDE_CONFIG = `{
   "mcpServers": {
     "payrail": {
       "command": "node",
-      "args": ["/absolute/path/to/NewMe/mcp/dist/index.js"],
+      "args": ["/Users/bernardo/Desktop/NewMe/payrail/mcp/dist/index.js"],
       "env": {
-        "PAYRAIL_API_URL": "http://localhost:3000",
+        "PAYRAIL_API_URL": "http://localhost:3033",
         "PAYRAIL_API_KEY": "<key from Policy & keys>",
-        "PAYRAIL_MCP_CHAIN": "testnet"
+        "PAYRAIL_MCP_CHAIN": "basesepolia"
       }
     }
   }
 }`;
 
-const QUOTE_CURL = `curl -s http://localhost:3000/v1/quote \\
+const QUOTE_CURL = `curl -s http://localhost:3033/v1/quote \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer $PAYRAIL_API_KEY" \\
+  -H "X-API-Key: $PAYRAIL_API_KEY" \\
   -d '{
     "chain": "testnet",
     "tokenIn": "USDC",
-    "tokenOut": "EURC",
+    "tokenOut": "USDC",
     "amount": "1000000",
-    "slippageBps": 50
+    "slippageBps": 0
   }'`;
 
-const PAYOUT_CURL = `curl -s http://localhost:3000/v1/payout \\
+const PAYOUT_CURL = `curl -s http://localhost:3033/v1/payout \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer $PAYRAIL_API_KEY" \\
+  -H "X-API-Key: $PAYRAIL_API_KEY" \\
   -d '{
-    "chain": "testnet",
-    "payer": "0xYOUR_WALLET_ADDRESS",
+    "chain": "basesepolia",
+    "payer": "0x959139C138Fa2925B86b1d5Db4785E8C35914439",
     "sourceToken": "USDC",
     "memo": "q3 contractors",
     "payments": [
-      { "recipient": "0xRECIPIENT_1", "amount": "2500000", "currency": "USDC" },
-      { "recipient": "0xRECIPIENT_2", "amount": "50000000000", "currency": "cirBTC" }
+      { "recipient": "0x959139C138Fa2925B86b1d5Db4785E8C35914439", "amount": "2500000", "currency": "USDC" }
     ]
   }'
 # → returns an UNSIGNED plan. Sign the steps with a wallet you control,
@@ -67,10 +66,12 @@ const UNITS = `Amounts over the wire are base-unit strings, never floats:
 - USDC / EURC: 6 decimals      -> 1 USDC = "1000000"
 - cirBTC:      8 decimals      -> 1     = "100000000"
 - WETH:       18 decimals      -> 1     = "1000000000000000000"
-- fees & estimated gas: native USDC @ 18 decimals
+- fees: native USDC @ 18 decimals; estimated gas is in the chain's gas token
+  (Arc: native USDC @ 18; Base Sepolia: ETH @ 18).
 
-On Arc, USDC is the native gas token (18 decimals); its ERC-20 view at
-0x3600…0000 shares the same balance (6-decimal view). One receipt = final.`;
+Chains (PAYRAIL_MCP_CHAIN): testnet (Arc, native-USDC gas) · mainnet (Arc, real
+funds) · basesepolia (Base Sepolia, ETH gas). On Arc one receipt = final;
+on Base Sepolia wait for a few confirmations.`;
 
 export function AgentPanel() {
   return (

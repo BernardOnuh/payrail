@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getChain } from "@payrail/api/liquidity";
 import type { PayrailApiClient } from "../apiClient.js";
 import type { McpConfigParsed } from "../config.js";
 import { decimalsFor, humanAmount } from "../format.js";
@@ -13,14 +14,18 @@ export const argsSchema = z.object({
 
 export type GetPlanStatusArgs = z.output<typeof argsSchema>;
 
-export function getPlanStatusDescription(): string {
+export function getPlanStatusDescription(chain: McpConfigParsed["chain"]): string {
+  const gas = getChain(chain).gasToken;
   return [
     "Get the current status of a payout plan: step-by-step state (unsigned / submitted / confirmed / failed),",
     "transaction hashes and explorer links, and final totals.",
     "",
     "Units: sourceTokenSpent is in base units of the plan's source token",
-    "  (USDC/EURC 6 decimals, cirBTC 8, WETH 18); feesUsdc and estimatedGasUsdc are in native USDC at 18 decimals.",
-    "On Arc, a transaction is final at the first receipt (deterministic finality, no reorgs).",
+    "  (USDC/EURC 6 decimals, cirBTC 8, WETH 18); feesUsdc is in native USDC at 18 decimals;",
+    `  estimatedGasUsdc is in base units of the gas currency (${gas.symbol}, ${gas.decimals} decimals on ${chain}).`,
+    chain === "basesepolia"
+      ? "On Base Sepolia, wait for several confirmations (reorgs are possible)."
+      : "On Arc, a transaction is final at the first receipt (deterministic finality, no reorgs).",
   ].join("\n");
 }
 
@@ -58,6 +63,7 @@ export async function getPlanStatusHandler(
       ),
       feesUsdc: humanAmount(state.totals.feesUsdc, 18),
       estimatedGasUsdc: humanAmount(state.totals.estimatedGasUsdc, 18),
+      gasToken: state.totals.gasToken ?? { symbol: getChain(config.chain).gasToken.symbol, decimals: 18 },
     },
     warnings: state.warnings,
     final: state.final,

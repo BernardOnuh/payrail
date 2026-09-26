@@ -2,20 +2,25 @@
  * Liquidity layer contracts for Payrail.
  *
  * Amounts are `bigint` in base units throughout:
- *   USDC  -> 6 decimals (ERC-20 interface at 0x3600..00)
+ *   USDC  -> 6 decimals (ERC-20 interface at 0x3600..00 on Arc)
  *   EURC  -> 6 decimals
  *   cirBTC -> 8 decimals
  *   WETH  -> 18 decimals
  *
- * Arc gas is native USDC with an 18-decimal view ("native USDC").
- * `estimatedFeeUsdc` is therefore expressed in native (18) base units.
+ * Gas is denominated per chain in `ChainConfig.gasToken` (the currency the
+ * wallet must hold to pay tx fees):
+ *   - Arc: native USDC with an 18-decimal view ("native USDC"), address 0x3600..00
+ *   - Base Sepolia: ETH, address null (chain-native)
+ * `estimatedGasUsdc` / `PlanTotals.estimatedGasUsdc` are expressed in
+ * `gasToken` base units (the name predates Base support and is kept on the
+ * wire for compatibility; consumers must pair it with `totals.gasToken`).
  * See /docs/RECON.md for the two-decimal-view USDC note.
  */
 
 export const USDC_ERC20_DECIMALS = 6;
 export const USDC_NATIVE_DECIMALS = 18;
 
-export type ChainKey = "mainnet" | "testnet";
+export type ChainKey = "mainnet" | "testnet" | "basesepolia";
 
 export type TokenKey = "USDC" | "EURC" | "cirBTC" | "WETH";
 
@@ -38,16 +43,27 @@ export interface UniswapV4Addresses {
   permit2: `0x${string}`;
 }
 
+export interface GasTokenInfo {
+  /** Human symbol the frontend uses to label gas estimates, e.g. "USDC" or "ETH". */
+  symbol: string;
+  /** Base-unit decimals of the gas currency (18 on both Arc native USDC and Base ETH). */
+  decimals: number;
+  /** Address of the gas token, or null when it is the chain-native currency (Base ETH). */
+  address: Hex | null;
+}
+
 export interface ChainConfig {
   key: ChainKey;
   chainId: number;
   rpcUrl: string;
   explorerUrl: string;
   faucetUrl?: string;
-  /** Minimum base fee the Arc mempool requires, in gwei (20 per RECON.md). */
+  /** Minimum base fee the mempool requires, in gwei (20 per RECON.md). */
   minGasGwei: number;
+  /** Currency the wallet pays tx fees in (native USDC on Arc, ETH on Base). */
+  gasToken: GasTokenInfo;
   /** Verified token registry. Addresses are loaded from here, never inlined in logic. */
-  tokens: Record<TokenKey, TokenInfo>;
+  tokens: Partial<Record<TokenKey, TokenInfo>>;
   /** Uniswap v4 canonical addresses; only present where verified (mainnet). */
   uniswap?: UniswapV4Addresses;
 }

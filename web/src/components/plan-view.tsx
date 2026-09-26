@@ -1,7 +1,7 @@
 "use client";
 
 import { useCountdownUntil } from "@/lib/client/hooks";
-import { tokenFor } from "@/lib/registry";
+import { chainDisplayName, gasTokenFor, tokenFor, type ChainName } from "@/lib/registry";
 import { cx, humanAmount, timeAgo, truncateAddress } from "@/lib/format";
 import type { Plan, PlanStep, PlanStepState, StepState } from "@/lib/payrail/types";
 import { Badge, Card, CardTitle, CopyButton } from "./ui";
@@ -15,7 +15,7 @@ function StepTypeBadge({ type }: { type: PlanStep["type"] }) {
   return <Badge tone={tone}>{label}</Badge>;
 }
 
-function SwapDetail({ step, chain }: { step: Extract<PlanStep, { type: "swap" }>; chain: "mainnet" | "testnet" }) {
+function SwapDetail({ step, chain }: { step: Extract<PlanStep, { type: "swap" }>; chain: ChainName }) {
   const decIn = tokenFor(chain, step.tokenIn).decimals;
   const decOut = tokenFor(chain, step.tokenOut).decimals;
   return (
@@ -33,7 +33,7 @@ function SwapDetail({ step, chain }: { step: Extract<PlanStep, { type: "swap" }>
   );
 }
 
-function BatchDetail({ step, chain }: { step: Extract<PlanStep, { type: "batchPayout" }>; chain: "mainnet" | "testnet" }) {
+function BatchDetail({ step, chain }: { step: Extract<PlanStep, { type: "batchPayout" }>; chain: ChainName }) {
   const dec = tokenFor(chain, step.currency).decimals;
   const total = step.payouts.reduce((a, l) => a + BigInt(l.amount), 0n);
   return (
@@ -62,7 +62,8 @@ function BatchDetail({ step, chain }: { step: Extract<PlanStep, { type: "batchPa
   );
 }
 
-function TxRow({ tx, chain }: { tx: PlanStep["tx"]; chain: "mainnet" | "testnet" }) {
+function TxRow({ tx, chain }: { tx: PlanStep["tx"]; chain: ChainName }) {
+  const gas = gasTokenFor(chain);
   return (
     <div className="mt-3 space-y-1.5 border-t border-line pt-3 text-[12px]">
       <div className="flex items-center gap-2">
@@ -72,7 +73,7 @@ function TxRow({ tx, chain }: { tx: PlanStep["tx"]; chain: "mainnet" | "testnet"
       </div>
       <div className="flex items-center gap-2">
         <span className="w-16 shrink-0 text-faint">value</span>
-        <span className="mono-num text-muted">{humanAmount(tx.value, 18)} USDC (native)</span>
+        <span className="mono-num text-muted">{humanAmount(tx.value, gas.decimals)} {gas.symbol} (native)</span>
       </div>
       <div className="flex items-center gap-2">
         <span className="w-16 shrink-0 text-faint">data</span>
@@ -83,7 +84,7 @@ function TxRow({ tx, chain }: { tx: PlanStep["tx"]; chain: "mainnet" | "testnet"
   );
 }
 
-export function PlanStepCard({ step, chain }: { step: StepView; chain: "mainnet" | "testnet" }) {
+export function PlanStepCard({ step, chain }: { step: StepView; chain: ChainName }) {
   const status: StepState["status"] = step.status ?? "unsigned";
   const st = STEP_STATUS[status];
   return (
@@ -153,9 +154,10 @@ export function PlanView({ plan }: { plan: Plan | (Plan & { status?: PlanStepSta
   const failedCount = steps.filter((s) => s.status === "failed").length;
 
   const sourceMeta = tokenFor(chain, plan.totals.sourceToken);
+  const gas = plan.totals.gasToken ?? gasTokenFor(chain);
   const spent = humanAmount(plan.totals.sourceTokenSpent, sourceMeta.decimals);
   const fees = humanAmount(plan.totals.feesUsdc, 18);
-  const gas = humanAmount(plan.totals.estimatedGasUsdc, 18);
+  const gasRead = `${humanAmount(plan.totals.estimatedGasUsdc, gas.decimals)} ${gas.symbol}`;
 
   return (
     <div className="space-y-5">
@@ -166,7 +168,7 @@ export function PlanView({ plan }: { plan: Plan | (Plan & { status?: PlanStepSta
           </h1>
           <CopyButton value={plan.planId} label="Copy plan id" />
           {status ? <PlanStatusBadge status={status} /> : <Badge tone="neutral">Not signed</Badge>}
-          <Badge tone={chain === "mainnet" ? "amber" : "neutral"}>{chain === "mainnet" ? "Mainnet" : "Testnet"}</Badge>
+          <Badge tone={chain === "mainnet" ? "amber" : "neutral"}>{chainDisplayName(chain)}</Badge>
           <span className="ml-auto font-mono text-[11.5px] text-faint">{timeAgo(plan.createdAt)}</span>
         </div>
 
@@ -207,7 +209,7 @@ export function PlanView({ plan }: { plan: Plan | (Plan & { status?: PlanStepSta
               .join(" · ")}
           />
           <Stat label="Fees" value={`${fees} USDC`} />
-          <Stat label="Est. gas" value={`${gas} USDC`} />
+          <Stat label="Est. gas" value={gasRead} />
         </dl>
       </Card>
 

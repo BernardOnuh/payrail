@@ -6,7 +6,7 @@ import { usePlanStream } from "./plan-stream";
 import { PlanView } from "./plan-view";
 import { SignStepper } from "./sign-stepper";
 import { Badge, Button, Card, EmptyState, Skeleton } from "./ui";
-import { tokenFor } from "@/lib/registry";
+import { explorerTxUrl, tokenFor } from "@/lib/registry";
 import { humanAmount } from "@/lib/format";
 import type { PlanState } from "@/lib/payrail/types";
 
@@ -107,7 +107,7 @@ function PlanOutcome({ plan }: { plan: PlanState }) {
             <li key={h} className="flex items-center justify-between gap-3 text-[12.5px]">
               <span className="text-faint">tx #{i + 1}</span>
               <a
-                href={`https://explorer.${plan.chain}.arc.io/tx/${h}`}
+                href={explorerTxUrl(plan.chain, h)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-mono text-accent underline decoration-accent/40 underline-offset-2"

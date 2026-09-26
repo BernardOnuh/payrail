@@ -1,7 +1,7 @@
 import { z } from "@hono/zod-openapi";
 import { getAddress, isAddress } from "viem";
 
-export const CHAIN_KEYS = ["mainnet", "testnet"] as const;
+export const CHAIN_KEYS = ["mainnet", "testnet", "basesepolia"] as const;
 export type ChainName = (typeof CHAIN_KEYS)[number];
 
 export const TOKEN_KEYS = ["USDC", "EURC", "cirBTC", "WETH"] as const;
@@ -10,7 +10,8 @@ export type TokenName = (typeof TOKEN_KEYS)[number];
 export const chainSchema = z.enum(CHAIN_KEYS).openapi({
   type: "string",
   enum: [...CHAIN_KEYS],
-  description: "Arc chain. mainnet = 5042, testnet = 5042002.",
+  description:
+    "Chain. mainnet = Arc 5042, testnet = Arc 5042002, basesepolia = Base 84532.",
 });
 
 export const tokenSchema = z.enum(TOKEN_KEYS).openapi({
@@ -25,6 +26,14 @@ export const slippageBpsSchema = z
   .min(1)
   .max(10_000)
   .openapi({ description: "Maximum accepted slippage, in basis points (1..10_000)." });
+
+/** Currency the wallet pays tx fees in (native USDC on Arc, ETH on Base). */
+export const gasTokenSchema = z
+  .object({
+    symbol: z.string(),
+    decimals: z.number().int().positive(),
+  })
+  .openapi("GasToken");
 
 const bigintString = z
   .string()

@@ -128,6 +128,7 @@ export function installHandlers(app: OpenAPIHono<AppEnv>): void {
         sourceNeeded: { [plan.sourceToken]: plan.totals.sourceTokenSpent.toString() },
         estimatedGasUsdc: plan.totals.estimatedGasUsdc.toString(),
         feesUsdc: plan.totals.feesUsdc.toString(),
+        gasToken: { symbol: plan.totals.gasToken.symbol, decimals: plan.totals.gasToken.decimals },
         stepsPreview: plan.steps.map((s) => ({ type: s.type, description: s.description })),
         warnings: plan.warnings,
       },
@@ -344,7 +345,7 @@ async function checkFunding(
   const native = await net.getNativeBalance(body.chain as never, body.payer);
   const neededNative = estimatedGasUsdcNative * 2n;
   if (native < neededNative) {
-    throw payerInsufficientFunds("payer does not have enough native USDC for gas", {
+    throw payerInsufficientFunds("payer does not have enough native currency for gas", {
       nativeBalance: native.toString(),
       needed: neededNative.toString(),
     });

@@ -22,7 +22,7 @@ export function stubNet(initial: {
   EURC?: bigint;
   reserves?: SwapReserves;
   estimateGas?: bigint;
-  baseFeeGwei?: bigint;
+  baseFeeWei?: bigint;
 } = {}): Net & { setBalance(token: string, amount: bigint): void } {
   const o = {
     native: initial.native ?? NATIVE_18 * 100n,
@@ -30,7 +30,7 @@ export function stubNet(initial: {
     EURC: initial.EURC ?? USDC_6 * 100n,
     reserves: initial.reserves ?? { reserve0: USDC_6 * 10n, reserve1: USDC_6 * 8n, seeded: true, feeBps: 30n },
     estimateGas: initial.estimateGas ?? 100_000n,
-    baseFeeGwei: initial.baseFeeGwei ?? 20n,
+    baseFeeWei: initial.baseFeeWei ?? 20n * 1_000_000_000n,
   };
   const balances: Record<string, bigint> = { native: o.native, USDC: o.USDC, EURC: o.EURC };
 
@@ -44,8 +44,8 @@ export function stubNet(initial: {
     async estimateGas() {
       return o.estimateGas;
     },
-    async baseFeeGwei() {
-      return o.baseFeeGwei;
+    async baseFeeWei() {
+      return o.baseFeeWei;
     },
     async getRouterReserves() {
       return o.reserves;

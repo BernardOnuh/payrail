@@ -31,8 +31,8 @@ export interface Net {
   getTokenBalance(chain: ChainKey, token: TokenKey, address: Hex): Promise<bigint>;
   /** Estimate gas (in gas units) for a tx from `from`. */
   estimateGas(chain: ChainKey, from: Hex, to: Hex, data: Hex, value: bigint): Promise<bigint>;
-  /** Current base fee in gwei. Falls back to chain.minGasGwei on a read error. */
-  baseFeeGwei(chain: ChainKey): Promise<bigint>;
+  /** Current base fee in gas-currency wei. Falls back to chain.minGasGwei on a read error. */
+  baseFeeWei(chain: ChainKey): Promise<bigint>;
   getRouterReserves(chain: ChainKey, router: Hex): Promise<SwapReserves>;
   waitForTx(chain: ChainKey, hash: Hash, timeoutMs?: number): Promise<ReceiptInfo>;
 }
@@ -71,15 +71,15 @@ export class ViemNet implements Net {
     return gas;
   }
 
-  async baseFeeGwei(chain: ChainKey): Promise<bigint> {
+  async baseFeeWei(chain: ChainKey): Promise<bigint> {
     try {
       const block = await clientFor(chain).getBlock({ blockTag: "latest" });
       const base = block.baseFeePerGas ?? null;
-      if (base != null && base > 0n) return base / 1_000_000_000n;
+      if (base != null && base > 0n) return base;
     } catch {
       /* fall through to the conservative chain default */
     }
-    return BigInt(getChain(chain).minGasGwei);
+    return BigInt(getChain(chain).minGasGwei) * 1_000_000_000n;
   }
 
   async getRouterReserves(chain: ChainKey, router: Hex): Promise<SwapReserves> {
@@ -134,8 +134,12 @@ export class ViemNet implements Net {
 
 /** Router addresses are env-driven so each chain can point at a deployed router. */
 export function routerAddressFor(chain: ChainKey): Hex | undefined {
-  const envKey = chain === "mainnet" ? "PAYRAIL_ROUTER_ADDRESS_MAINNET" : "PAYRAIL_ROUTER_ADDRESS_TESTNET";
-  const raw = process.env[envKey];
+  const envKeys: Record<ChainKey, string> = {
+    mainnet: "PAYRAIL_ROUTER_ADDRESS_MAINNET",
+    testnet: "PAYRAIL_ROUTER_ADDRESS_TESTNET",
+    basesepolia: "PAYRAIL_ROUTER_ADDRESS_BASESEPOLIA",
+  };
+  const raw = process.env[envKeys[chain]];
   if (!raw) return undefined;
   const v = raw as Hex;
   return /^0x[0-9a-fA-F]{40}$/.test(v) ? v : undefined;

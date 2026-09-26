@@ -41,7 +41,9 @@ export function tokensForChain(chain: ChainName): TokenMeta[] {
 }
 
 export function decimalsFor(chain: ChainName, token: TokenName): number {
-  return getChain(chain).tokens[token].decimals;
+  const t = getChain(chain).tokens[token];
+  if (!t) throw new Error(`token ${token} is not supported on chain ${chain}`);
+  return t.decimals;
 }
 
 export interface QuoteSummaryShape {

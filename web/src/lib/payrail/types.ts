@@ -1,5 +1,5 @@
 /** Wire types mirroring the Payrail API (see api/src/http/schemas). */
-export type ChainName = "mainnet" | "testnet";
+export type ChainName = "mainnet" | "testnet" | "basesepolia";
 export type TokenName = "USDC" | "EURC" | "cirBTC" | "WETH";
 
 export interface QuoteRequest {
@@ -110,6 +110,8 @@ export interface PlanTotals {
   payouts: Partial<Record<TokenName, string>>;
   feesUsdc: string;
   estimatedGasUsdc: string;
+  /** Gas currency for `estimatedGasUsdc` (USDC native on Arc, ETH on Base). */
+  gasToken?: { symbol: string; decimals: number };
 }
 
 export interface Plan {
@@ -247,6 +249,7 @@ export interface PayoutEstimate {
   sourceNeeded: Partial<Record<TokenName, string>>;
   estimatedGasUsdc: string;
   feesUsdc: string;
+  gasToken?: { symbol: string; decimals: number };
   stepsPreview: { type: PlanStep["type"]; description: string }[];
   warnings: string[];
 }

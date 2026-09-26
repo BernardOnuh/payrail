@@ -2,6 +2,7 @@ import { z } from "@hono/zod-openapi";
 import {
   addressSchema,
   chainSchema,
+  gasTokenSchema,
   hexTxHashSchema,
   isoDateTimeSchema,
   tokenSchema,
@@ -87,6 +88,7 @@ export const planStateSchema = z.object({
     payouts: z.record(tokenSchema, z.string().openapi({ type: "string", pattern: "^[0-9]+$" })),
     feesUsdc: z.string().openapi({ type: "string", pattern: "^[0-9]+$" }),
     estimatedGasUsdc: z.string().openapi({ type: "string", pattern: "^[0-9]+$" }),
+    gasToken: gasTokenSchema,
   }),
   warnings: z.array(z.string()),
   createdAt: isoDateTimeSchema,

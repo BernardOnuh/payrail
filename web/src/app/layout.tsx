@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Inter, Inter_Tight } from "next/font/google";
+import { IBM_Plex_Mono, Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { AppProviders } from "@/components/providers";
 import { Shell } from "@/components/shell";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap" });
-const tight = Inter_Tight({ variable: "--font-tight", subsets: ["latin"], display: "swap" });
+const grotesk = Space_Grotesk({
+  variable: "--font-grotesk",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
 const plex = IBM_Plex_Mono({
   variable: "--font-plex",
   subsets: ["latin"],
@@ -21,7 +26,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${tight.variable} ${plex.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${grotesk.variable} ${plex.variable}`}>
       <body className="min-h-dvh bg-paper font-sans text-ink antialiased">
         <AppProviders>
           <Shell>{children}</Shell>

@@ -109,7 +109,7 @@ export async function buildServer(raw?: Record<string, string | undefined>) {
 
   server.tool(
     "get_plan_status",
-    getPlanStatusDescription(),
+    getPlanStatusDescription(config.chain),
     getPlanStatusArgs.shape,
     async (args): Promise<ToolResult> => {
       try {
@@ -122,7 +122,7 @@ export async function buildServer(raw?: Record<string, string | undefined>) {
 
   server.tool(
     "list_supported_tokens",
-    listSupportedTokensDescription(),
+    listSupportedTokensDescription(config.chain),
     listSupportedTokensArgs.shape,
     async (): Promise<ToolResult> => {
       try {

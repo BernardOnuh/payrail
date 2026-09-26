@@ -82,7 +82,7 @@ export function KeysPanel() {
           </div>
           <p className="mt-2 text-[12.5px] text-muted">
             Keep it server-side. Only the SHA-256 hash is stored; we can never show it again. Prefix keys usable in HTTP calls:{" "}
-            <code className="font-mono">Authorization: Bearer {justCreated.apiKey}</code>.
+            <code className="font-mono">X-API-Key: {justCreated.apiKey}</code>.
           </p>
         </Card>
       ) : null}

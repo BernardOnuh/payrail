@@ -62,10 +62,11 @@ const services = {
 
 // Fail loudly if the operator expects a router where none is configured.
 const rTestnet = routerAddressFor("testnet");
-const rMainnet = routerAddressFor("mainnet");
-if (!rTestnet && !rMainnet) {
-  console.warn("payrail: no PAYRAIL_ROUTER_ADDRESS_* set; swap legs will be unavailable");
-}
+  const rMainnet = routerAddressFor("mainnet");
+  const rBase = routerAddressFor("basesepolia");
+  if (!rTestnet && !rMainnet && !rBase) {
+    console.warn("payrail: no PAYRAIL_ROUTER_ADDRESS_* set; swap legs will be unavailable");
+  }
 
 const app = buildApiApp(services);
 serve({ fetch: app.fetch, port }, (info) => {
