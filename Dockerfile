@@ -1,7 +1,7 @@
 # Builds the Payrail API. Deploy root should be this repo (builder = DOCKERFILE).
 # The web app is deployed separately on Vercel (see README).
 
-FROM node:20-slim AS build
+FROM node:22-slim AS build
 WORKDIR /app
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
@@ -19,7 +19,7 @@ COPY api api
 RUN pnpm --filter @payrail/api build \
   && rm -f api/dist/*.map
 
-FROM node:20-slim
+FROM node:22-slim
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/node_modules ./node_modules
