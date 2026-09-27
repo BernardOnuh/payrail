@@ -1,7 +1,5 @@
 node_modules/
 dist/
-.env
-.env.local
 *.tsbuildinfo
 .next/
 web/.data/
@@ -16,3 +14,4 @@ contracts/cache/
 contracts/typechain-types/
 api/scratch-*.ts
 scripts/db/
+config.bat

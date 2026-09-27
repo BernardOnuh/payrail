@@ -30,7 +30,7 @@ const CLAUDE_CONFIG = `{
       "env": {
         "PAYRAIL_API_URL": "http://localhost:3033",
         "PAYRAIL_API_KEY": "<key from Policy & keys>",
-        "PAYRAIL_MCP_CHAIN": "basesepolia"
+        "PAYRAIL_MCP_CHAIN": "testnet"
       }
     }
   }
@@ -42,21 +42,21 @@ const QUOTE_CURL = `curl -s http://localhost:3033/v1/quote \\
   -d '{
     "chain": "testnet",
     "tokenIn": "USDC",
-    "tokenOut": "USDC",
-    "amount": "1000000",
-    "slippageBps": 0
+    "tokenOut": "EURC",
+    "amountIn": "1000000",
+    "slippageBps": 50
   }'`;
 
 const PAYOUT_CURL = `curl -s http://localhost:3033/v1/payout \\
   -H "Content-Type: application/json" \\
   -H "X-API-Key: $PAYRAIL_API_KEY" \\
   -d '{
-    "chain": "basesepolia",
+    "chain": "testnet",
     "payer": "0x959139C138Fa2925B86b1d5Db4785E8C35914439",
     "sourceToken": "USDC",
     "memo": "q3 contractors",
     "payments": [
-      { "recipient": "0x959139C138Fa2925B86b1d5Db4785E8C35914439", "amount": "2500000", "currency": "USDC" }
+      { "recipient": "0x959139C138Fa2925B86b1d5Db4785E8C35914439", "amount": "1000000", "currency": "USDC" }
     ]
   }'
 # → returns an UNSIGNED plan. Sign the steps with a wallet you control,
@@ -67,11 +67,12 @@ const UNITS = `Amounts over the wire are base-unit strings, never floats:
 - cirBTC:      8 decimals      -> 1     = "100000000"
 - WETH:       18 decimals      -> 1     = "1000000000000000000"
 - fees: native USDC @ 18 decimals; estimated gas is in the chain's gas token
-  (Arc: native USDC @ 18; Base Sepolia: ETH @ 18).
+  (Arc: native USDC @ 18; Base Sepolia / Base: ETH @ 18).
 
-Chains (PAYRAIL_MCP_CHAIN): testnet (Arc, native-USDC gas) · mainnet (Arc, real
-funds) · basesepolia (Base Sepolia, ETH gas). On Arc one receipt = final;
-on Base Sepolia wait for a few confirmations.`;
+Chains (PAYRAIL_MCP_CHAIN): testnet (Arc testnet, native-USDC gas) · mainnet
+(Arc mainnet, real funds) · basesepolia (Base Sepolia, ETH gas) · base
+(Base Mainnet, real ETH gas, USDC-only payouts). Arc finalizes on one receipt;
+Base waits ~12 seconds.`;
 
 export function AgentPanel() {
   return (
