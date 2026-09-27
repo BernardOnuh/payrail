@@ -28,9 +28,9 @@ import { requireWallet, sendAndWait, loadEnvFile, erc20Abi } from "./lib/env.js"
 const USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as `0x${string}`;
 const EURC_ADDRESS = "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" as `0x${string}`;
 
-const EURC_PAYOUT = 2_000_000n; // 2.00 EURC
-const USDC_PAYOUT_A = 1_500_000n; // 1.50 USDC
-const USDC_PAYOUT_B = 500_000n; // 0.50 USDC
+const EURC_PAYOUT = BigInt(process.env.E2E_EURC_PAYOUT ?? 2_000_000); // default 2.00 EURC
+const USDC_PAYOUT_A = BigInt(process.env.E2E_USDC_A ?? 1_500_000); // default 1.50 USDC
+const USDC_PAYOUT_B = BigInt(process.env.E2E_USDC_B ?? 500_000); // default 0.50 USDC
 
 function assert(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new Error(`ASSERT FAILED: ${msg}`);

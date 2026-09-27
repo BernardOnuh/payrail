@@ -30,7 +30,7 @@ the server never holds or signs keys by default.
 | --- | --- | --- |
 | `PAYRAIL_API_URL` | `http://localhost:3000` | Payrail HTTP API base URL |
 | `PAYRAIL_API_KEY` | — | Payrail API key (`X-API-Key`); required by quote/plan tools |
-| `PAYRAIL_MCP_CHAIN` | `testnet` | `mainnet` or `testnet` |
+| `PAYRAIL_MCP_CHAIN` | `testnet` | `testnet`, `mainnet`, `basesepolia`, or `base` |
 | `PAYRAIL_MCP_SLIPPAGE_BPS` | `50` | Default slippage for quotes (basis points) |
 | `MCP_SIGNER_ENABLED` | `false` | Enable the optional demo signer (`sign_plan` tool) |
 | `MCP_SIGNER_PRIVATE_KEY` | — | Demo wallet key. **Never a funded key.** |
@@ -64,6 +64,17 @@ pnpm --filter @payrail/mcp start
 
 The server speaks MCP over stdio. Start the Payrail API first
 (`pnpm --filter @payrail/api start`) and create an API key.
+
+### Chains
+
+| `PAYRAIL_MCP_CHAIN` | Network | Gas | Funds |
+| --- | --- | --- | --- |
+| `testnet` | Arc testnet (5042002) | native USDC | faucet testnet USDC |
+| `mainnet` | Arc mainnet (5042) | native USDC | real USDC (CCTP) |
+| `basesepolia` | Base Sepolia (84532) | ETH | Base Sepolia faucets |
+| `base` | Base Mainnet (8453) | ETH | real ETH + native USDC |
+
+Arc finalizes on one receipt; Base waits ~12 seconds.
 
 ### Claude Desktop
 
